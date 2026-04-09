@@ -252,12 +252,17 @@ function App() {
     }
   }
 
-  const handleRegisterSubmit = (event) => {
+  const handleRegisterSubmit = async (event) => {
     event.preventDefault()
 
-    const nextEmployee = {
-      id: Date.now(),
-      email: registerForm.email.trim(),
+    const token = localStorage.getItem('dtr_admin_token')
+    if (!token) {
+      window.alert('Admin session expired. Please login again.')
+      return
+    }
+
+    const requestBody = {
+      email: registerForm.email.trim().toLowerCase(),
       firstName: registerForm.firstName.trim(),
       lastName: registerForm.lastName.trim(),
       position: registerForm.position.trim(),
@@ -265,16 +270,44 @@ function App() {
       address: registerForm.address.trim(),
     }
 
-    setEmployees((current) => [nextEmployee, ...current])
-    setRegisterForm({
-      email: '',
-      firstName: '',
-      lastName: '',
-      position: '',
-      contactNumber: '',
-      address: '',
-    })
-    setRegisterModalOpen(false)
+    try {
+      const response = await fetch(`${AUTH_API_BASE_URL}/api/v1/admin/dtr/employees`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(requestBody),
+      })
+
+      if (!response.ok) {
+        let message = 'Unable to register employee.'
+        try {
+          const errorBody = await response.json()
+          if (errorBody?.message) {
+            message = errorBody.message
+          }
+        } catch {
+          // Ignore non-JSON errors and keep default message.
+        }
+        throw new Error(message)
+      }
+
+      const savedEmployee = await response.json()
+      setEmployees((current) => [savedEmployee, ...current])
+      setRegisterForm({
+        email: '',
+        firstName: '',
+        lastName: '',
+        position: '',
+        contactNumber: '',
+        address: '',
+      })
+      setRegisterModalOpen(false)
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unable to register employee.'
+      window.alert(message)
+    }
   }
 
   const handleEnterEditMode = () => {
