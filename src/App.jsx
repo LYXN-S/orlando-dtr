@@ -8,7 +8,9 @@ const AUTH_API_BASE_URL = API_BASE_URL.replace(/\/?api\/v1\/?$/, '')
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(
-    () => !!localStorage.getItem('dtr_admin_token'),
+    () =>
+      !!localStorage.getItem('dtr_admin_token') &&
+      localStorage.getItem('dtr_admin_role') === 'ROLE_SUPER_ADMIN',
   )
   const [isLoggingIn, setIsLoggingIn] = useState(false)
   const [loginForm, setLoginForm] = useState({ email: '', password: '' })
@@ -227,6 +229,14 @@ function App() {
       const data = await response.json()
       if (!data?.token) {
         setLoginError('Login succeeded but no token was returned.')
+        return
+      }
+
+      if (data.role !== 'ROLE_SUPER_ADMIN') {
+        localStorage.removeItem('dtr_admin_token')
+        localStorage.removeItem('dtr_admin_role')
+        setIsLoggedIn(false)
+        setLoginError('Only the backend admin account can access DTR.')
         return
       }
 
