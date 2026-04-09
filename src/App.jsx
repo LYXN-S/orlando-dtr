@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import Modal from './Modal'
 
 const API_BASE_URL =
@@ -44,35 +44,7 @@ function App() {
   )
   const [selectedEmployeeId, setSelectedEmployeeId] = useState(null)
 
-  const [employees, setEmployees] = useState([
-    {
-      id: 1,
-      email: 'ana.reyes@orlando.com',
-      firstName: 'Ana',
-      lastName: 'Reyes',
-      position: 'Sales Associate',
-      contactNumber: '+63 917 111 2345',
-      address: 'Taguig City',
-    },
-    {
-      id: 2,
-      email: 'miguel.santos@orlando.com',
-      firstName: 'Miguel',
-      lastName: 'Santos',
-      position: 'Store Manager',
-      contactNumber: '+63 917 222 3456',
-      address: 'Makati City',
-    },
-    {
-      id: 3,
-      email: 'carlo.rodriguez@orlando.com',
-      firstName: 'Carlo',
-      lastName: 'Rodriguez',
-      position: 'Sales Associate',
-      contactNumber: '+63 917 333 4567',
-      address: 'Quezon City',
-    },
-  ])
+  const [employees, setEmployees] = useState([])
 
   const [attendanceLogs, setAttendanceLogs] = useState([
     {
@@ -190,6 +162,46 @@ function App() {
     })
   }, [employees, attendanceLogs])
 
+  useEffect(() => {
+    if (!isLoggedIn) {
+      return
+    }
+
+    const token = localStorage.getItem('dtr_admin_token')
+    if (!token) {
+      return
+    }
+
+    let cancelled = false
+
+    const loadEmployees = async () => {
+      try {
+        const response = await fetch(`${AUTH_API_BASE_URL}/api/v1/admin/dtr/employees`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
+
+        if (!response.ok) {
+          return
+        }
+
+        const data = await response.json()
+        if (!cancelled && Array.isArray(data)) {
+          setEmployees(data)
+        }
+      } catch {
+        // Keep current in-memory state when the backend is temporarily unreachable.
+      }
+    }
+
+    loadEmployees()
+
+    return () => {
+      cancelled = true
+    }
+  }, [isLoggedIn])
+
   const handleLoginSubmit = async (event) => {
     event.preventDefault()
     const email = loginForm.email.trim().toLowerCase()
@@ -294,7 +306,10 @@ function App() {
       }
 
       const savedEmployee = await response.json()
-      setEmployees((current) => [savedEmployee, ...current])
+      setEmployees((current) => [
+        savedEmployee,
+        ...current.filter((emp) => emp.id !== savedEmployee.id),
+      ])
       setRegisterForm({
         email: '',
         firstName: '',
