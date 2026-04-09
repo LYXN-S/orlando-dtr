@@ -45,41 +45,15 @@ function App() {
   const [selectedEmployeeId, setSelectedEmployeeId] = useState(null)
 
   const [employees, setEmployees] = useState([])
+  const [attendanceLogs, setAttendanceLogs] = useState([])
 
-  const [attendanceLogs, setAttendanceLogs] = useState([
-    {
-      id: 101,
-      employeeId: 1,
-      timeIn: '2026-04-07T08:03:00',
-      timeOut: '2026-04-07T17:18:00',
-      photoUrl:
-        'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=600&q=80',
-    },
-    {
-      id: 102,
-      employeeId: 2,
-      timeIn: '2026-04-07T08:11:00',
-      timeOut: '2026-04-07T17:09:00',
-      photoUrl:
-        'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=600&q=80',
-    },
-    {
-      id: 103,
-      employeeId: 1,
-      timeIn: '2026-04-06T08:12:00',
-      timeOut: '2026-04-06T17:20:00',
-      photoUrl:
-        'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=600&q=80',
-    },
-    {
-      id: 104,
-      employeeId: 3,
-      timeIn: '2026-04-07T08:25:00',
-      timeOut: null,
-      photoUrl:
-        'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=600&q=80',
-    },
-  ])
+  const resolveProofUrl = (value) => {
+    if (!value) return ''
+    if (value.startsWith('http://') || value.startsWith('https://')) {
+      return value
+    }
+    return `${AUTH_API_BASE_URL}${value.startsWith('/') ? '' : '/'}${value}`
+  }
 
   const formatTimeShort = (value) => {
     if (!value) return '—'
@@ -119,10 +93,11 @@ function App() {
         const employee = employees.find((e) => e.id === log.employeeId)
         return {
           ...log,
+          photoUrl: resolveProofUrl(log.photoUrl || log.proofUrl),
           fullName: employee
             ? `${employee.firstName} ${employee.lastName}`
-            : 'Unknown',
-          position: employee?.position || '—',
+            : log.employeeName || 'Unknown',
+          position: employee?.position || log.employeePosition || '—',
         }
       }),
     [attendanceLogs, employees],
@@ -195,7 +170,29 @@ function App() {
       }
     }
 
+    const loadAttendance = async () => {
+      try {
+        const response = await fetch(`${AUTH_API_BASE_URL}/api/v1/admin/dtr/attendance`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
+
+        if (!response.ok) {
+          return
+        }
+
+        const data = await response.json()
+        if (!cancelled && Array.isArray(data)) {
+          setAttendanceLogs(data)
+        }
+      } catch {
+        // Keep current in-memory state when the backend is temporarily unreachable.
+      }
+    }
+
     loadEmployees()
+    loadAttendance()
 
     return () => {
       cancelled = true
@@ -375,7 +372,7 @@ function App() {
   }
 
   const openProofPreview = (entry) => {
-    setProofPreviewUrl(entry.photoUrl)
+    setProofPreviewUrl(resolveProofUrl(entry.photoUrl || entry.proofUrl))
     setProofPreviewTitle(`${entry.fullName} - Proof`)
     setProofPreviewOpen(true)
   }
