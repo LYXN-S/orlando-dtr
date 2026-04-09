@@ -5,6 +5,44 @@ const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080'
 
 const AUTH_API_BASE_URL = API_BASE_URL.replace(/\/?api\/v1\/?$/, '')
+const MANILA_TIME_ZONE = 'Asia/Manila'
+
+const parseBackendDate = (value) => {
+  if (!value) return null
+  const hasZone = /([zZ]|[+-]\d{2}:\d{2})$/.test(value)
+  const parsed = new Date(hasZone ? value : `${value}Z`)
+  return Number.isNaN(parsed.getTime()) ? null : parsed
+}
+
+const MANILA_TIME_FORMATTER = new Intl.DateTimeFormat('en-US', {
+  timeZone: MANILA_TIME_ZONE,
+  hour: '2-digit',
+  minute: '2-digit',
+})
+
+const MANILA_DATE_FORMATTER = new Intl.DateTimeFormat('en-US', {
+  timeZone: MANILA_TIME_ZONE,
+  weekday: 'short',
+  year: 'numeric',
+  month: 'short',
+  day: 'numeric',
+})
+
+const MANILA_DATE_TIME_FORMATTER = new Intl.DateTimeFormat('en-US', {
+  timeZone: MANILA_TIME_ZONE,
+  year: 'numeric',
+  month: 'short',
+  day: '2-digit',
+  hour: '2-digit',
+  minute: '2-digit',
+})
+
+const MANILA_DATE_KEY_FORMATTER = new Intl.DateTimeFormat('en-CA', {
+  timeZone: MANILA_TIME_ZONE,
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+})
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(
@@ -22,6 +60,7 @@ function App() {
   const [proofPreviewOpen, setProofPreviewOpen] = useState(false)
   const [proofPreviewUrl, setProofPreviewUrl] = useState('')
   const [proofPreviewTitle, setProofPreviewTitle] = useState('Proof Preview')
+  const [proofPreviewError, setProofPreviewError] = useState('')
   const [editingCredentialsForm, setEditingCredentialsForm] = useState({
     email: '',
     firstName: '',
@@ -40,7 +79,7 @@ function App() {
   })
   const [activeTab, setActiveTab] = useState('overview')
   const [selectedDate, setSelectedDate] = useState(
-    new Date().toISOString().split('T')[0],
+    MANILA_DATE_KEY_FORMATTER.format(new Date()),
   )
   const [selectedEmployeeId, setSelectedEmployeeId] = useState(null)
 
@@ -57,35 +96,28 @@ function App() {
 
   const formatTimeShort = (value) => {
     if (!value) return '—'
-    const date = new Date(value)
-    return date.toLocaleString([], {
-      hour: '2-digit',
-      minute: '2-digit',
-    })
+    const date = parseBackendDate(value)
+    if (!date) return '—'
+    return MANILA_TIME_FORMATTER.format(date)
   }
 
   const formatDate = (value) => {
-    const date = new Date(value)
-    return date.toLocaleDateString('en-US', {
-      weekday: 'short',
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    })
+    const date = parseBackendDate(value)
+    if (!date) return '—'
+    return MANILA_DATE_FORMATTER.format(date)
   }
 
   const formatDateTime = (value) => {
-    const date = new Date(value)
-    return date.toLocaleString([], {
-      year: 'numeric',
-      month: 'short',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-    })
+    const date = parseBackendDate(value)
+    if (!date) return '—'
+    return MANILA_DATE_TIME_FORMATTER.format(date)
   }
 
-  const getDateOnly = (dateString) => dateString.split('T')[0]
+  const getDateOnly = (dateString) => {
+    const date = parseBackendDate(dateString)
+    if (!date) return ''
+    return MANILA_DATE_KEY_FORMATTER.format(date)
+  }
 
   const logsWithEmployee = useMemo(
     () =>
@@ -122,7 +154,7 @@ function App() {
   )
 
   const employeeStatus = useMemo(() => {
-    const today = new Date().toISOString().split('T')[0]
+    const today = MANILA_DATE_KEY_FORMATTER.format(new Date())
     return employees.map((emp) => {
       const todayLog = attendanceLogs.find(
         (log) =>
@@ -136,6 +168,14 @@ function App() {
       }
     })
   }, [employees, attendanceLogs])
+
+  useEffect(() => {
+    return () => {
+      if (proofPreviewUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(proofPreviewUrl)
+      }
+    }
+  }, [proofPreviewUrl])
 
   useEffect(() => {
     if (!isLoggedIn) {
@@ -371,14 +411,48 @@ function App() {
     })
   }
 
-  const openProofPreview = (entry) => {
-    setProofPreviewUrl(resolveProofUrl(entry.photoUrl || entry.proofUrl))
+  const openProofPreview = async (entry) => {
+    const token = localStorage.getItem('dtr_admin_token')
+    const rawProofUrl = resolveProofUrl(entry.photoUrl || entry.proofUrl)
+
+    setProofPreviewError('')
+    if (proofPreviewUrl.startsWith('blob:')) {
+      URL.revokeObjectURL(proofPreviewUrl)
+    }
+    setProofPreviewUrl('')
     setProofPreviewTitle(`${entry.fullName} - Proof`)
     setProofPreviewOpen(true)
+
+    if (!token || !rawProofUrl) {
+      setProofPreviewError('Unable to load proof image.')
+      return
+    }
+
+    try {
+      const response = await fetch(rawProofUrl, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch proof image.')
+      }
+
+      const blob = await response.blob()
+      const objectUrl = URL.createObjectURL(blob)
+      setProofPreviewUrl(objectUrl)
+    } catch {
+      setProofPreviewError('Failed to load proof image.')
+    }
   }
 
   const closeProofPreview = () => {
     setProofPreviewOpen(false)
+    setProofPreviewError('')
+    if (proofPreviewUrl.startsWith('blob:')) {
+      URL.revokeObjectURL(proofPreviewUrl)
+    }
     setProofPreviewUrl('')
     setProofPreviewTitle('Proof Preview')
   }
@@ -391,7 +465,7 @@ function App() {
     setActiveTab('overview')
   }
 
-  const todayDate = new Date().toISOString().split('T')[0]
+  const todayDate = MANILA_DATE_KEY_FORMATTER.format(new Date())
 
   return (
     <main className="app-shell">
@@ -610,11 +684,7 @@ function App() {
                                     className="thumb-button"
                                     onClick={() => openProofPreview(entry)}
                                   >
-                                    <img
-                                      className="thumb"
-                                      src={entry.photoUrl}
-                                      alt="Attendance proof"
-                                    />
+                                    Open Proof
                                   </button>
                                 </td>
                               </tr>
@@ -683,11 +753,7 @@ function App() {
                               className="thumb-button"
                               onClick={() => openProofPreview(entry)}
                             >
-                              <img
-                                className="thumb"
-                                src={entry.photoUrl}
-                                alt="Attendance proof"
-                              />
+                              Open Proof
                             </button>
                           </td>
                         </tr>
@@ -1052,6 +1118,9 @@ function App() {
                   alt={proofPreviewTitle}
                 />
               </div>
+            ) : null}
+            {proofPreviewError ? (
+              <p className="error-text">{proofPreviewError}</p>
             ) : null}
           </Modal>
         </>
