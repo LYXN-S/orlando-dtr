@@ -1040,7 +1040,7 @@ function App() {
                               </div>
                             </aside>
 
-                            <form className="edit-form-grid" onSubmit={handleSaveCredentials}>
+                            <form id="credentials-edit-form" className="edit-form-grid" onSubmit={handleSaveCredentials}>
                               <div className="credentials-section">
                                 <h3 className="section-title">Identity</h3>
                                 <div className="credentials-grid-2">
@@ -1167,6 +1167,7 @@ function App() {
                       <>
                         <button
                           type="submit"
+                          form="credentials-edit-form"
                           className="primary-btn"
                           disabled={isSavingCredentials}
                         >
