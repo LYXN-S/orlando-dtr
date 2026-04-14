@@ -122,6 +122,7 @@ function App() {
     MANILA_DATE_KEY_FORMATTER.format(new Date()),
   )
   const [selectedEmployeeId, setSelectedEmployeeId] = useState(null)
+  const [employeeSearch, setEmployeeSearch] = useState('')
 
   const [employees, setEmployees] = useState([])
   const [attendanceLogs, setAttendanceLogs] = useState([])
@@ -204,6 +205,25 @@ function App() {
     [logsWithEmployee, selectedEmployeeId],
   )
 
+  const selectedEmployee = useMemo(
+    () => employees.find((e) => e.id === selectedEmployeeId) || null,
+    [employees, selectedEmployeeId],
+  )
+
+  const filteredEmployees = useMemo(() => {
+    const term = employeeSearch.trim().toLowerCase()
+    if (!term) return employees
+
+    return employees.filter((emp) => {
+      const fullName = `${emp.firstName} ${emp.lastName}`.toLowerCase()
+      return (
+        fullName.includes(term) ||
+        (emp.position || '').toLowerCase().includes(term) ||
+        (emp.email || '').toLowerCase().includes(term)
+      )
+    })
+  }, [employees, employeeSearch])
+
   const employeeStatus = useMemo(() => {
     const today = MANILA_DATE_KEY_FORMATTER.format(new Date())
     return employees.map((emp) => {
@@ -228,6 +248,23 @@ function App() {
   const absentCount = useMemo(
     () => employeeStatus.length - presentCount,
     [employeeStatus, presentCount],
+  )
+
+  const todayLogsCount = useMemo(() => {
+    const today = MANILA_DATE_KEY_FORMATTER.format(new Date())
+    return attendanceLogs.filter(
+      (log) => getDateOnly(log.timeIn) === today,
+    ).length
+  }, [attendanceLogs])
+
+  const weeklyUniqueEmployees = useMemo(
+    () => new Set(logsByWeek.map((log) => log.employeeId)).size,
+    [logsByWeek],
+  )
+
+  const weeklyCompletedSessions = useMemo(
+    () => logsByWeek.filter((log) => !!log.timeOut).length,
+    [logsByWeek],
   )
 
   useEffect(() => {
@@ -749,19 +786,22 @@ function App() {
               className={`tab ${activeTab === 'overview' ? 'active' : ''}`}
               onClick={() => setActiveTab('overview')}
             >
-              Step 1: Overview
+              <span className="tab-title">Overview</span>
+              <span className="tab-caption">Live attendance pulse</span>
             </button>
             <button
               className={`tab ${activeTab === 'employees' ? 'active' : ''}`}
               onClick={() => setActiveTab('employees')}
             >
-              Step 2: Employee View
+              <span className="tab-title">Employee View</span>
+              <span className="tab-caption">Timeline and credentials</span>
             </button>
             <button
               className={`tab ${activeTab === 'date' ? 'active' : ''}`}
               onClick={() => setActiveTab('date')}
             >
-              Step 3: Weekly Audit
+              <span className="tab-title">Weekly Audit</span>
+              <span className="tab-caption">Cross-team review</span>
             </button>
           </div>
 
@@ -775,13 +815,36 @@ function App() {
             </section>
           ) : activeTab === 'overview' ? (
             <section className="card">
-              <h2>Today's Attendance Status</h2>
-              <p className="section-guide">
-                Step 1: Review who timed in today. Click any employee card to continue to Step 2.
-              </p>
-              <p className="helper-text">
-                {formatDate(`${todayDate}T00:00:00`)}
-              </p>
+              <div className="tab-header">
+                <div>
+                  <h2>Today's Attendance Status</h2>
+                  <p className="section-guide">
+                    Start here. Review attendance health, then click a card to open the employee timeline.
+                  </p>
+                  <p className="helper-text">
+                    {formatDate(`${todayDate}T00:00:00`)}
+                  </p>
+                </div>
+                <div className="kpi-grid">
+                  <article className="kpi-card kpi-good">
+                    <span>Present</span>
+                    <strong>{presentCount}</strong>
+                  </article>
+                  <article className="kpi-card kpi-warn">
+                    <span>Absent</span>
+                    <strong>{absentCount}</strong>
+                  </article>
+                  <article className="kpi-card">
+                    <span>Logs Today</span>
+                    <strong>{todayLogsCount}</strong>
+                  </article>
+                </div>
+              </div>
+
+              <div className="next-step-banner">
+                <strong>Next action:</strong> pick any employee card below to continue to Employee View.
+              </div>
+
               <div className="employee-grid">
                 {employeeStatus.map((emp) => (
                   <div
@@ -828,15 +891,27 @@ function App() {
           ) : activeTab === 'employees' ? (
             <div className="two-column">
               <section className="card">
-                <h2>Select Employee</h2>
-                <p className="section-guide">
-                  Step 2: Pick an employee from the list, then inspect logs and credentials.
-                </p>
-                <p className="helper-text">
-                  View DTR for a specific employee
-                </p>
+                <div className="tab-header compact">
+                  <div>
+                    <h2>Employee Directory</h2>
+                    <p className="section-guide">
+                      Pick a profile to inspect timeline entries and manage credentials.
+                    </p>
+                  </div>
+                </div>
+
+                <label className="search-label">
+                  Search Employee
+                  <input
+                    type="text"
+                    value={employeeSearch}
+                    onChange={(event) => setEmployeeSearch(event.target.value)}
+                    placeholder="Name, role, or email"
+                  />
+                </label>
+
                 <div className="employee-list">
-                  {employees.map((emp) => (
+                  {filteredEmployees.map((emp) => (
                     <button
                       key={emp.id}
                       className={`employee-list-item ${selectedEmployeeId === emp.id ? 'selected' : ''}`}
@@ -850,6 +925,10 @@ function App() {
                     </button>
                   ))}
                 </div>
+
+                {filteredEmployees.length === 0 ? (
+                  <p className="empty-state">No employee matched your search.</p>
+                ) : null}
               </section>
 
               {selectedEmployeeId ? (
@@ -857,22 +936,31 @@ function App() {
                   <div className="employee-header-section">
                     <div>
                       <h2>
-                        {`${employees.find((e) => e.id === selectedEmployeeId)?.firstName || ''} ${employees.find((e) => e.id === selectedEmployeeId)?.lastName || ''}`}{' '}
-                        - DTR
+                        {`${selectedEmployee?.firstName || ''} ${selectedEmployee?.lastName || ''}`}{' '}
+                        Timeline
                       </h2>
                       <p className="helper-text">
                         {logsByEmployee.length} records found
                       </p>
                     </div>
-                    <button
-                      className="secondary-btn"
-                      onClick={() => {
-                        setViewingCredentialsEmployeeId(selectedEmployeeId)
-                        setCredentialsModalOpen(true)
-                      }}
-                    >
-                      View Credentials
-                    </button>
+
+                    <div className="employee-actions">
+                      <button
+                        className="secondary-btn"
+                        onClick={() => {
+                          setViewingCredentialsEmployeeId(selectedEmployeeId)
+                          setCredentialsModalOpen(true)
+                        }}
+                      >
+                        View Credentials
+                      </button>
+                      <button
+                        className="secondary-btn"
+                        onClick={() => setActiveTab('date')}
+                      >
+                        Open Weekly Audit
+                      </button>
+                    </div>
                   </div>
                   {logsByEmployee.length > 0 ? (
                     <div className="table-wrap">
@@ -927,10 +1015,29 @@ function App() {
             </div>
           ) : activeTab === 'date' ? (
             <section className="card">
-              <h2>Weekly Records</h2>
-              <p className="section-guide">
-                Step 3: Adjust the week and review all attendance records for audit and payroll checks.
-              </p>
+              <div className="tab-header">
+                <div>
+                  <h2>Weekly Audit</h2>
+                  <p className="section-guide">
+                    Adjust the week, review attendance consistency, and verify proof activity.
+                  </p>
+                </div>
+                <div className="kpi-grid">
+                  <article className="kpi-card">
+                    <span>Total Records</span>
+                    <strong>{logsByWeek.length}</strong>
+                  </article>
+                  <article className="kpi-card">
+                    <span>Employees Logged</span>
+                    <strong>{weeklyUniqueEmployees}</strong>
+                  </article>
+                  <article className="kpi-card">
+                    <span>Completed Sessions</span>
+                    <strong>{weeklyCompletedSessions}</strong>
+                  </article>
+                </div>
+              </div>
+
               <div className="filter-controls">
                 <label>
                   Week Anchor Date

@@ -236,7 +236,7 @@ html {
 }
 
 .tab {
-  padding: 0.875rem 1.25rem;
+  padding: 0.75rem 1.15rem;
   background: none;
   border: none;
   border-bottom: 3px solid transparent;
@@ -248,6 +248,24 @@ html {
   transition: all 0.24s ease;
   position: relative;
   bottom: -1px;
+  display: grid;
+  gap: 0.18rem;
+  text-align: left;
+}
+
+.tab-title {
+  font-size: 0.94rem;
+  font-weight: 700;
+}
+
+.tab-caption {
+  font-size: 0.76rem;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.tab.active .tab-caption {
+  color: var(--primary-hover);
 }
 
 .tab:hover {
@@ -264,6 +282,67 @@ html {
   grid-template-columns: 320px 1fr;
   gap: 1.5rem;
   padding: 0 1rem;
+}
+
+.tab-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.tab-header.compact {
+  margin-bottom: 0.8rem;
+}
+
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.55rem;
+  min-width: 330px;
+}
+
+.kpi-card {
+  display: grid;
+  gap: 0.2rem;
+  background: #fffaf5;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 0.65rem 0.75rem;
+}
+
+.kpi-card span {
+  font-size: 0.74rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+}
+
+.kpi-card strong {
+  font-size: 1.15rem;
+  line-height: 1.1;
+}
+
+.kpi-card.kpi-good {
+  border-color: #b5e2c8;
+  background: #f1fbf4;
+}
+
+.kpi-card.kpi-warn {
+  border-color: #ead8c7;
+  background: #fff7f0;
+}
+
+.next-step-banner {
+  margin-top: 1rem;
+  margin-bottom: 0.85rem;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--accent);
+  border-radius: 12px;
+  background: #f8fbf2;
+  font-size: 0.87rem;
 }
 
 .employee-grid {
@@ -373,6 +452,10 @@ html {
   margin-top: 1rem;
 }
 
+.search-label {
+  margin-top: 0.1rem;
+}
+
 .employee-list-item {
   display: flex;
   align-items: center;
@@ -424,6 +507,12 @@ html {
 .employee-header-section button {
   flex-shrink: 0;
   margin-top: 0.25rem;
+}
+
+.employee-actions {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
 }
 
 .selection-placeholder {
@@ -892,6 +981,25 @@ td {
 
   .two-column {
     grid-template-columns: 1fr;
+  }
+
+  .tab-header {
+    flex-direction: column;
+  }
+
+  .kpi-grid {
+    min-width: 0;
+    width: 100%;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .employee-actions {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .employee-actions .secondary-btn {
+    width: 100%;
   }
 
   .employee-grid {
