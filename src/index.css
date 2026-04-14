@@ -478,6 +478,11 @@ html {
   margin-top: 0.1rem;
 }
 
+.credentials-edit-layout > .modal-actions {
+  grid-column: 1 / -1;
+  margin-top: 0.5rem;
+}
+
 input {
   width: 100%;
   min-width: 0;
