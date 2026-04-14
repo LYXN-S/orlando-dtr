@@ -662,27 +662,6 @@ function App() {
       ? `${formatDate(`${selectedWeekRange.startKey}T00:00:00`)} - ${formatDate(`${selectedWeekRange.endKey}T00:00:00`)}`
       : '—'
 
-  const workflowSteps = [
-    {
-      id: 'overview',
-      badge: 'Step 1',
-      title: 'Check Who Is In Today',
-      description: 'Start with today\'s presence summary and quickly spot absences.',
-    },
-    {
-      id: 'employees',
-      badge: 'Step 2',
-      title: 'Open Employee Timeline',
-      description: 'Select a person, review logs, and manage credentials if needed.',
-    },
-    {
-      id: 'date',
-      badge: 'Step 3',
-      title: 'Audit Weekly Records',
-      description: 'Navigate week-by-week to review company-wide attendance activity.',
-    },
-  ]
-
   return (
     <main className="app-shell">
       <header className="top-bar">
@@ -754,31 +733,13 @@ function App() {
             </button>
           </div>
 
-          <section className="workflow-guide card">
-            <div className="workflow-guide-header">
-              <div>
-                <p className="workflow-kicker">Operator Workflow</p>
-                <h2>Follow These Steps</h2>
-              </div>
-              <p className="helper-text workflow-summary">
-                Active staff: {presentCount} present, {absentCount} absent, {employees.length} total employees.
-              </p>
-            </div>
-
-            <div className="workflow-grid">
-              {workflowSteps.map((step) => (
-                <button
-                  key={step.id}
-                  type="button"
-                  className={`workflow-step ${activeTab === step.id ? 'active' : ''}`}
-                  onClick={() => setActiveTab(step.id)}
-                >
-                  <span className="workflow-step-badge">{step.badge}</span>
-                  <strong>{step.title}</strong>
-                  <span>{step.description}</span>
-                </button>
-              ))}
-            </div>
+          <section className="navigation-strip card">
+            <p>
+              <strong>Active staff:</strong> {presentCount} present, {absentCount} absent, {employees.length} total employees.
+            </p>
+            <p>
+              Use <strong>Overview</strong> for live status, <strong>Employee View</strong> for individual records and credentials, and <strong>Weekly Audit</strong> for date-range review.
+            </p>
           </section>
 
           <div className="tabs">
