@@ -1019,7 +1019,7 @@ function App() {
                       })()}
                     </div>
                   ) : (
-                    <div className="credentials-edit-layout">
+                    <form className="credentials-edit-layout" onSubmit={handleSaveCredentials}>
                       {(() => {
                         const emp = employees.find(
                           (e) => e.id === viewingCredentialsEmployeeId,
@@ -1041,7 +1041,7 @@ function App() {
                               </div>
                             </aside>
 
-                            <form id="credentials-edit-form" className="edit-form-grid" onSubmit={handleSaveCredentials}>
+                            <div className="edit-form-grid">
                               <div className="credentials-section">
                                 <h3 className="section-title">Identity</h3>
                                 <div className="credentials-grid-2">
@@ -1148,15 +1148,32 @@ function App() {
                                   />
                                 </label>
                               </div>
-                            </form>
+                            </div>
+
+                            <div className="modal-actions">
+                              <button
+                                type="submit"
+                                className="primary-btn"
+                                disabled={isSavingCredentials}
+                              >
+                                {isSavingCredentials ? 'Updating...' : 'Update Credentials'}
+                              </button>
+                              <button
+                                type="button"
+                                className="secondary-btn"
+                                onClick={handleCancelEdit}
+                                disabled={isSavingCredentials}
+                              >
+                                Cancel
+                              </button>
+                            </div>
                           </>
                         )
                       })()}
-                    </div>
+                    </form>
                   )}
-
-                  <div className="modal-actions">
-                    {!credentialsEditMode ? (
+                  {!credentialsEditMode ? (
+                    <div className="modal-actions">
                       <button
                         type="button"
                         className="primary-btn"
@@ -1164,27 +1181,8 @@ function App() {
                       >
                         Edit Credentials
                       </button>
-                    ) : (
-                      <>
-                        <button
-                          type="submit"
-                          form="credentials-edit-form"
-                          className="primary-btn"
-                          disabled={isSavingCredentials}
-                        >
-                          {isSavingCredentials ? 'Updating...' : 'Update Credentials'}
-                        </button>
-                        <button
-                          type="button"
-                          className="secondary-btn"
-                          onClick={handleCancelEdit}
-                          disabled={isSavingCredentials}
-                        >
-                          Cancel
-                        </button>
-                      </>
-                    )}
-                  </div>
+                    </div>
+                  ) : null}
                 </>
               )}
           </Modal>
