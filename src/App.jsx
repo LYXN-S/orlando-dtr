@@ -373,6 +373,7 @@ function App() {
   const handleEnterEditMode = () => {
     const emp = employees.find((e) => e.id === viewingCredentialsEmployeeId)
     if (emp) {
+      setIsSavingCredentials(false)
       setEditingCredentialsForm({
         email: emp.email,
         firstName: emp.firstName,
