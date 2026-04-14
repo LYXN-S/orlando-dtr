@@ -1041,7 +1041,8 @@ function App() {
                               </div>
                             </aside>
 
-                            <div className="edit-form-grid">
+                            <div className="credentials-edit-content">
+                              <div className="edit-form-grid">
                               <div className="credentials-section">
                                 <h3 className="section-title">Identity</h3>
                                 <div className="credentials-grid-2">
@@ -1148,24 +1149,25 @@ function App() {
                                   />
                                 </label>
                               </div>
-                            </div>
+                              </div>
 
-                            <div className="modal-actions">
-                              <button
-                                type="submit"
-                                className="primary-btn"
-                                disabled={isSavingCredentials}
-                              >
-                                {isSavingCredentials ? 'Updating...' : 'Update Credentials'}
-                              </button>
-                              <button
-                                type="button"
-                                className="secondary-btn"
-                                onClick={handleCancelEdit}
-                                disabled={isSavingCredentials}
-                              >
-                                Cancel
-                              </button>
+                              <div className="modal-actions">
+                                <button
+                                  type="submit"
+                                  className="primary-btn"
+                                  disabled={isSavingCredentials}
+                                >
+                                  {isSavingCredentials ? 'Updating...' : 'Update Credentials'}
+                                </button>
+                                <button
+                                  type="button"
+                                  className="secondary-btn"
+                                  onClick={handleCancelEdit}
+                                  disabled={isSavingCredentials}
+                                >
+                                  Cancel
+                                </button>
+                              </div>
                             </div>
                           </>
                         )
