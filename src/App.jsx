@@ -220,6 +220,16 @@ function App() {
     })
   }, [employees, attendanceLogs])
 
+  const presentCount = useMemo(
+    () => employeeStatus.filter((emp) => emp.timedIn).length,
+    [employeeStatus],
+  )
+
+  const absentCount = useMemo(
+    () => employeeStatus.length - presentCount,
+    [employeeStatus, presentCount],
+  )
+
   useEffect(() => {
     return () => {
       if (proofPreviewUrl.startsWith('blob:')) {
@@ -615,6 +625,27 @@ function App() {
       ? `${formatDate(`${selectedWeekRange.startKey}T00:00:00`)} - ${formatDate(`${selectedWeekRange.endKey}T00:00:00`)}`
       : '—'
 
+  const workflowSteps = [
+    {
+      id: 'overview',
+      badge: 'Step 1',
+      title: 'Check Who Is In Today',
+      description: 'Start with today\'s presence summary and quickly spot absences.',
+    },
+    {
+      id: 'employees',
+      badge: 'Step 2',
+      title: 'Open Employee Timeline',
+      description: 'Select a person, review logs, and manage credentials if needed.',
+    },
+    {
+      id: 'date',
+      badge: 'Step 3',
+      title: 'Audit Weekly Records',
+      description: 'Navigate week-by-week to review company-wide attendance activity.',
+    },
+  ]
+
   return (
     <main className="app-shell">
       <header className="top-bar">
@@ -686,24 +717,51 @@ function App() {
             </button>
           </div>
 
+          <section className="workflow-guide card">
+            <div className="workflow-guide-header">
+              <div>
+                <p className="workflow-kicker">Operator Workflow</p>
+                <h2>Follow These Steps</h2>
+              </div>
+              <p className="helper-text workflow-summary">
+                Active staff: {presentCount} present, {absentCount} absent, {employees.length} total employees.
+              </p>
+            </div>
+
+            <div className="workflow-grid">
+              {workflowSteps.map((step) => (
+                <button
+                  key={step.id}
+                  type="button"
+                  className={`workflow-step ${activeTab === step.id ? 'active' : ''}`}
+                  onClick={() => setActiveTab(step.id)}
+                >
+                  <span className="workflow-step-badge">{step.badge}</span>
+                  <strong>{step.title}</strong>
+                  <span>{step.description}</span>
+                </button>
+              ))}
+            </div>
+          </section>
+
           <div className="tabs">
             <button
               className={`tab ${activeTab === 'overview' ? 'active' : ''}`}
               onClick={() => setActiveTab('overview')}
             >
-              Overview
+              Step 1: Overview
             </button>
             <button
               className={`tab ${activeTab === 'employees' ? 'active' : ''}`}
               onClick={() => setActiveTab('employees')}
             >
-              By Employee
+              Step 2: Employee View
             </button>
             <button
               className={`tab ${activeTab === 'date' ? 'active' : ''}`}
               onClick={() => setActiveTab('date')}
             >
-              By Date
+              Step 3: Weekly Audit
             </button>
           </div>
 
@@ -718,6 +776,9 @@ function App() {
           ) : activeTab === 'overview' ? (
             <section className="card">
               <h2>Today's Attendance Status</h2>
+              <p className="section-guide">
+                Step 1: Review who timed in today. Click any employee card to continue to Step 2.
+              </p>
               <p className="helper-text">
                 {formatDate(`${todayDate}T00:00:00`)}
               </p>
@@ -768,6 +829,9 @@ function App() {
             <div className="two-column">
               <section className="card">
                 <h2>Select Employee</h2>
+                <p className="section-guide">
+                  Step 2: Pick an employee from the list, then inspect logs and credentials.
+                </p>
                 <p className="helper-text">
                   View DTR for a specific employee
                 </p>
@@ -788,7 +852,7 @@ function App() {
                 </div>
               </section>
 
-              {selectedEmployeeId && (
+              {selectedEmployeeId ? (
                 <section className="card">
                   <div className="employee-header-section">
                     <div>
@@ -852,11 +916,21 @@ function App() {
                     </p>
                   )}
                 </section>
+              ) : (
+                <section className="card selection-placeholder">
+                  <h2>Choose An Employee To Continue</h2>
+                  <p className="helper-text">
+                    Select a name on the left panel to load their attendance timeline and credential actions.
+                  </p>
+                </section>
               )}
             </div>
           ) : activeTab === 'date' ? (
             <section className="card">
               <h2>Weekly Records</h2>
+              <p className="section-guide">
+                Step 3: Adjust the week and review all attendance records for audit and payroll checks.
+              </p>
               <div className="filter-controls">
                 <label>
                   Week Anchor Date
