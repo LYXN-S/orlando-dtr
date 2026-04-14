@@ -44,6 +44,44 @@ const MANILA_DATE_KEY_FORMATTER = new Intl.DateTimeFormat('en-CA', {
   day: '2-digit',
 })
 
+const parseDateKeyToUtcDate = (dateKey) => {
+  if (!dateKey) return null
+  const [year, month, day] = dateKey.split('-').map(Number)
+  if (!year || !month || !day) return null
+  return new Date(Date.UTC(year, month - 1, day))
+}
+
+const formatUtcDateToDateKey = (date) =>
+  `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, '0')}-${String(date.getUTCDate()).padStart(2, '0')}`
+
+const shiftDateKeyByDays = (dateKey, days) => {
+  const date = parseDateKeyToUtcDate(dateKey)
+  if (!date) return dateKey
+  date.setUTCDate(date.getUTCDate() + days)
+  return formatUtcDateToDateKey(date)
+}
+
+const getWeekRangeFromDateKey = (dateKey) => {
+  const date = parseDateKeyToUtcDate(dateKey)
+  if (!date) {
+    return { startKey: '', endKey: '' }
+  }
+
+  // Monday-based week range.
+  const weekday = date.getUTCDay()
+  const daysFromMonday = (weekday + 6) % 7
+  const weekStart = new Date(date)
+  weekStart.setUTCDate(weekStart.getUTCDate() - daysFromMonday)
+
+  const weekEnd = new Date(weekStart)
+  weekEnd.setUTCDate(weekEnd.getUTCDate() + 6)
+
+  return {
+    startKey: formatUtcDateToDateKey(weekStart),
+    endKey: formatUtcDateToDateKey(weekEnd),
+  }
+}
+
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(
     () =>
@@ -137,13 +175,24 @@ function App() {
     [attendanceLogs, employees],
   )
 
-  const logsByDate = useMemo(
-    () =>
-      logsWithEmployee.filter(
-        (log) => getDateOnly(log.timeIn) === selectedDate,
-      ),
-    [logsWithEmployee, selectedDate],
+  const selectedWeekRange = useMemo(
+    () => getWeekRangeFromDateKey(selectedDate),
+    [selectedDate],
   )
+
+  const logsByWeek = useMemo(() => {
+    if (!selectedWeekRange.startKey || !selectedWeekRange.endKey) {
+      return []
+    }
+
+    return logsWithEmployee.filter((log) => {
+      const dateOnly = getDateOnly(log.timeIn)
+      return (
+        dateOnly >= selectedWeekRange.startKey &&
+        dateOnly <= selectedWeekRange.endKey
+      )
+    })
+  }, [logsWithEmployee, selectedWeekRange])
 
   const logsByEmployee = useMemo(
     () =>
@@ -546,6 +595,26 @@ function App() {
 
   const todayDate = MANILA_DATE_KEY_FORMATTER.format(new Date())
 
+  const handlePreviousWeek = () => {
+    setSelectedDate((current) => shiftDateKeyByDays(current, -7))
+  }
+
+  const handleNextWeek = () => {
+    setSelectedDate((current) => {
+      const next = shiftDateKeyByDays(current, 7)
+      return next > todayDate ? todayDate : next
+    })
+  }
+
+  const handleCurrentWeek = () => {
+    setSelectedDate(todayDate)
+  }
+
+  const weeklyRangeLabel =
+    selectedWeekRange.startKey && selectedWeekRange.endKey
+      ? `${formatDate(`${selectedWeekRange.startKey}T00:00:00`)} - ${formatDate(`${selectedWeekRange.endKey}T00:00:00`)}`
+      : '—'
+
   return (
     <main className="app-shell">
       <header className="top-bar">
@@ -787,10 +856,10 @@ function App() {
             </div>
           ) : activeTab === 'date' ? (
             <section className="card">
-              <h2>Records by Date</h2>
+              <h2>Weekly Records</h2>
               <div className="filter-controls">
                 <label>
-                  Select Date
+                  Week Anchor Date
                   <input
                     type="date"
                     value={selectedDate}
@@ -798,14 +867,39 @@ function App() {
                     max={todayDate}
                   />
                 </label>
-                <span className="date-display">{formatDate(`${selectedDate}T00:00:00`)}</span>
+                <div className="week-actions">
+                  <button
+                    type="button"
+                    className="secondary-btn"
+                    onClick={handlePreviousWeek}
+                  >
+                    Previous Week
+                  </button>
+                  <button
+                    type="button"
+                    className="secondary-btn"
+                    onClick={handleCurrentWeek}
+                  >
+                    This Week
+                  </button>
+                  <button
+                    type="button"
+                    className="secondary-btn"
+                    onClick={handleNextWeek}
+                    disabled={selectedDate >= todayDate}
+                  >
+                    Next Week
+                  </button>
+                </div>
+                <span className="date-display">{weeklyRangeLabel}</span>
               </div>
 
-              {logsByDate.length > 0 ? (
+              {logsByWeek.length > 0 ? (
                 <div className="table-wrap">
                   <table>
                     <thead>
                       <tr>
+                        <th>Date</th>
                         <th>Name</th>
                         <th>Position</th>
                         <th>Time In</th>
@@ -814,8 +908,11 @@ function App() {
                       </tr>
                     </thead>
                     <tbody>
-                      {logsByDate.map((entry) => (
+                      {logsByWeek
+                        .sort((a, b) => new Date(b.timeIn) - new Date(a.timeIn))
+                        .map((entry) => (
                         <tr key={entry.id}>
+                          <td>{formatDate(entry.timeIn)}</td>
                           <td>
                             <button
                               className="employee-link"
@@ -846,7 +943,7 @@ function App() {
                 </div>
               ) : (
                 <p className="empty-state">
-                  No records found for {formatDate(`${selectedDate}T00:00:00`)}.
+                  No records found for the selected week ({weeklyRangeLabel}).
                 </p>
               )}
             </section>

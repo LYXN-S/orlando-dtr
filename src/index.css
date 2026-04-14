@@ -562,6 +562,18 @@ input {
   font-weight: 500;
 }
 
+.week-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  align-items: center;
+}
+
+.week-actions .secondary-btn {
+  padding: 0.6rem 0.85rem;
+  font-size: 0.85rem;
+}
+
 .empty-state {
   text-align: center;
   color: var(--muted);
