@@ -51,6 +51,8 @@ function App() {
       localStorage.getItem('dtr_admin_role') === 'ROLE_SUPER_ADMIN',
   )
   const [isLoggingIn, setIsLoggingIn] = useState(false)
+  const [isLoadingDashboard, setIsLoadingDashboard] = useState(false)
+  const [isSavingCredentials, setIsSavingCredentials] = useState(false)
   const [loginForm, setLoginForm] = useState({ email: '', password: '' })
   const [loginError, setLoginError] = useState('')
   const [registerModalOpen, setRegisterModalOpen] = useState(false)
@@ -179,15 +181,18 @@ function App() {
 
   useEffect(() => {
     if (!isLoggedIn) {
+      setIsLoadingDashboard(false)
       return
     }
 
     const token = localStorage.getItem('dtr_admin_token')
     if (!token) {
+      setIsLoadingDashboard(false)
       return
     }
 
     let cancelled = false
+    setIsLoadingDashboard(true)
 
     const loadEmployees = async () => {
       try {
@@ -231,8 +236,11 @@ function App() {
       }
     }
 
-    loadEmployees()
-    loadAttendance()
+    Promise.all([loadEmployees(), loadAttendance()]).finally(() => {
+      if (!cancelled) {
+        setIsLoadingDashboard(false)
+      }
+    })
 
     return () => {
       cancelled = true
@@ -377,28 +385,6 @@ function App() {
     }
   }
 
-  const handleSaveCredentials = () => {
-    setEmployees((current) =>
-      current.map((emp) =>
-        emp.id === viewingCredentialsEmployeeId
-          ? {
-              ...emp,
-              ...editingCredentialsForm,
-            }
-          : emp,
-      ),
-    )
-    setCredentialsEditMode(false)
-    setEditingCredentialsForm({
-      email: '',
-      firstName: '',
-      lastName: '',
-      position: '',
-      contactNumber: '',
-      address: '',
-    })
-  }
-
   const handleCancelEdit = () => {
     setCredentialsEditMode(false)
     setEditingCredentialsForm({
@@ -461,8 +447,100 @@ function App() {
     localStorage.removeItem('dtr_admin_token')
     localStorage.removeItem('dtr_admin_role')
     setIsLoggedIn(false)
+    setIsLoadingDashboard(false)
+    setIsSavingCredentials(false)
     setLoginForm({ email: '', password: '' })
     setActiveTab('overview')
+  }
+
+  const handleCloseCredentialsModal = () => {
+    setCredentialsModalOpen(false)
+    setViewingCredentialsEmployeeId(null)
+    setCredentialsEditMode(false)
+    setIsSavingCredentials(false)
+    setEditingCredentialsForm({
+      email: '',
+      firstName: '',
+      lastName: '',
+      position: '',
+      contactNumber: '',
+      address: '',
+    })
+  }
+
+  const handleSaveCredentials = async (event) => {
+    event.preventDefault()
+
+    const employeeId = viewingCredentialsEmployeeId
+    if (!employeeId) {
+      return
+    }
+
+    const token = localStorage.getItem('dtr_admin_token')
+    if (!token) {
+      window.alert('Admin session expired. Please login again.')
+      return
+    }
+
+    const requestBody = {
+      email: editingCredentialsForm.email.trim().toLowerCase(),
+      firstName: editingCredentialsForm.firstName.trim(),
+      lastName: editingCredentialsForm.lastName.trim(),
+      position: editingCredentialsForm.position.trim(),
+      contactNumber: editingCredentialsForm.contactNumber.trim(),
+      address: editingCredentialsForm.address.trim(),
+    }
+
+    setIsSavingCredentials(true)
+
+    try {
+      const response = await fetch(
+        `${AUTH_API_BASE_URL}/api/v1/admin/dtr/employees/${employeeId}`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(requestBody),
+        },
+      )
+
+      if (!response.ok) {
+        let message = 'Unable to update employee credentials.'
+        try {
+          const errorBody = await response.json()
+          if (errorBody?.message) {
+            message = errorBody.message
+          }
+        } catch {
+          // Ignore non-JSON errors and keep default message.
+        }
+        throw new Error(message)
+      }
+
+      const updatedEmployee = await response.json()
+      setEmployees((current) =>
+        current.map((emp) =>
+          emp.id === updatedEmployee.id ? updatedEmployee : emp,
+        ),
+      )
+      setCredentialsEditMode(false)
+      setEditingCredentialsForm({
+        email: '',
+        firstName: '',
+        lastName: '',
+        position: '',
+        contactNumber: '',
+        address: '',
+      })
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : 'Unable to update employee credentials.'
+      window.alert(message)
+    } finally {
+      setIsSavingCredentials(false)
+    }
   }
 
   const todayDate = MANILA_DATE_KEY_FORMATTER.format(new Date())
@@ -559,7 +637,15 @@ function App() {
             </button>
           </div>
 
-          {activeTab === 'overview' && (
+          {isLoadingDashboard ? (
+            <section className="card loading-state" aria-busy="true">
+              <div className="loading-spinner" />
+              <h2>Loading DTR data</h2>
+              <p className="helper-text">
+                Fetching employees and attendance records.
+              </p>
+            </section>
+          ) : activeTab === 'overview' ? (
             <section className="card">
               <h2>Today's Attendance Status</h2>
               <p className="helper-text">
@@ -608,9 +694,7 @@ function App() {
                 ))}
               </div>
             </section>
-          )}
-
-          {activeTab === 'employees' && (
+          ) : activeTab === 'employees' ? (
             <div className="two-column">
               <section className="card">
                 <h2>Select Employee</h2>
@@ -700,9 +784,7 @@ function App() {
                 </section>
               )}
             </div>
-          )}
-
-          {activeTab === 'date' && (
+          ) : activeTab === 'date' ? (
             <section className="card">
               <h2>Records by Date</h2>
               <div className="filter-controls">
@@ -767,7 +849,7 @@ function App() {
                 </p>
               )}
             </section>
-          )}
+          ) : null}
 
           <Modal
             isOpen={registerModalOpen}
@@ -878,11 +960,7 @@ function App() {
           </Modal>
           <Modal
             isOpen={credentialsModalOpen}
-            onClose={() => {
-              setCredentialsModalOpen(false)
-              setViewingCredentialsEmployeeId(null)
-              setCredentialsEditMode(false)
-            }}
+            onClose={handleCloseCredentialsModal}
             title={
               viewingCredentialsEmployeeId
                 ? `${employees.find((e) => e.id === viewingCredentialsEmployeeId)?.firstName || ''} ${employees.find((e) => e.id === viewingCredentialsEmployeeId)?.lastName || ''} - Credentials`
@@ -962,7 +1040,7 @@ function App() {
                               </div>
                             </aside>
 
-                            <form className="edit-form-grid">
+                            <form className="edit-form-grid" onSubmit={handleSaveCredentials}>
                               <div className="credentials-section">
                                 <h3 className="section-title">Identity</h3>
                                 <div className="credentials-grid-2">
@@ -1079,6 +1157,7 @@ function App() {
                   <div className="modal-actions">
                     {!credentialsEditMode ? (
                       <button
+                        type="button"
                         className="primary-btn"
                         onClick={handleEnterEditMode}
                       >
@@ -1087,14 +1166,17 @@ function App() {
                     ) : (
                       <>
                         <button
+                          type="submit"
                           className="primary-btn"
-                          onClick={handleSaveCredentials}
+                          disabled={isSavingCredentials}
                         >
-                          Update Credentials
+                          {isSavingCredentials ? 'Updating...' : 'Update Credentials'}
                         </button>
                         <button
+                          type="button"
                           className="secondary-btn"
                           onClick={handleCancelEdit}
+                          disabled={isSavingCredentials}
                         >
                           Cancel
                         </button>
