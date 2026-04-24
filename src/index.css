@@ -501,7 +501,6 @@ html {
   gap: 1rem;
   min-width: 360px;
 }
-}
 
 .kpi-card {
   display: grid;
@@ -620,7 +619,6 @@ html {
   margin: 0.375rem 0 0;
   font-size: 0.875rem;
   color: var(--text-muted);
-}
 }
 
 .status-badge {
