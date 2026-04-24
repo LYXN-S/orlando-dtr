@@ -206,10 +206,9 @@ html {
   top: -24px;
   width: 24px;
   height: 24px;
-  background: var(--primary);
+  background: var(--secondary);
   border-bottom-right-radius: 24px;
-  box-shadow: 0 12px 0 0 var(--secondary);
-  z-index: -1;
+  box-shadow: 0 12px 0 0 var(--primary);
 }
 
 /* Inverted Corner Effect - Bottom (Clean Cutout) */
@@ -220,10 +219,9 @@ html {
   bottom: -24px;
   width: 24px;
   height: 24px;
-  background: var(--primary);
+  background: var(--secondary);
   border-top-right-radius: 24px;
-  box-shadow: 0 -12px 0 0 var(--secondary);
-  z-index: -1;
+  box-shadow: 0 -12px 0 0 var(--primary);
 }
 
 /* Main Content Area */
