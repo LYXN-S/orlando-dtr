@@ -682,22 +682,40 @@ function App() {
   return (
     <main className={`app-shell ${!isLoggedIn ? 'login-shell' : ''}`}>
       {isLoggedIn ? (
-        <header className="top-bar">
-          <div className="brand-lockup">
+        <aside className="sidebar">
+          <div className="sidebar-header">
             <img
               src={orlandoLogo}
               alt="Orlando logo"
-              className="brand-logo"
+              className="sidebar-logo"
             />
-            <div>
-              <h1>Orlando DTR</h1>
-              <p>Daily time records management</p>
-            </div>
+            <span className="sidebar-brand">Orlando DTR</span>
           </div>
-          <button className="secondary-btn" onClick={handleLogout}>
-            Logout
-          </button>
-        </header>
+
+          <nav className="sidebar-nav" aria-label="Dashboard Navigation">
+            <div className="nav-section">
+              <span className="nav-section-title">Main</span>
+              <button
+                className={`nav-item ${activeTab === 'overview' ? 'active' : ''}`}
+                onClick={() => setActiveTab('overview')}
+              >
+                <span>Overview</span>
+              </button>
+              <button
+                className={`nav-item ${activeTab === 'employees' ? 'active' : ''}`}
+                onClick={() => setActiveTab('employees')}
+              >
+                <span>Employees</span>
+              </button>
+              <button
+                className={`nav-item ${activeTab === 'weeklyAudit' ? 'active' : ''}`}
+                onClick={() => setActiveTab('weeklyAudit')}
+              >
+                <span>Weekly Audit</span>
+              </button>
+            </div>
+          </nav>
+        </aside>
       ) : null}
 
       {!isLoggedIn ? (
@@ -781,22 +799,30 @@ function App() {
           </div>
         </section>
       ) : (
-        <>
-          <div className="dashboard-toolbar">
-            <button
-              className="primary-btn"
-              onClick={() => setRegisterModalOpen(true)}
-            >
-              + Register Employee
-            </button>
-          </div>
+        <section className="main-content">
+          <header className="top-header">
+            <h1>Daily Time Records</h1>
+            <div className="top-header-actions">
+              <button
+                className="primary-btn"
+                onClick={() => setRegisterModalOpen(true)}
+              >
+                + Register Employee
+              </button>
+              <button className="secondary-btn" onClick={handleLogout}>
+                Logout
+              </button>
+            </div>
+          </header>
+
+          <div className="content-area">
 
           <section className="navigation-strip card">
             <p>
               <strong>Active staff:</strong> {presentCount} present, {absentCount} absent, {employees.length} total employees.
             </p>
             <p>
-              Use <strong>Overview</strong> for live status, <strong>Employee View</strong> for individual records and credentials, and <strong>Weekly Audit</strong> for date-range review.
+              Use <strong>Overview</strong> for live status, <strong>Employees</strong> for individual records and credentials, and <strong>Weekly Audit</strong> for date-range review.
             </p>
           </section>
 
@@ -816,8 +842,8 @@ function App() {
               <span className="tab-caption">Timeline and credentials</span>
             </button>
             <button
-              className={`tab ${activeTab === 'date' ? 'active' : ''}`}
-              onClick={() => setActiveTab('date')}
+              className={`tab ${activeTab === 'weeklyAudit' ? 'active' : ''}`}
+              onClick={() => setActiveTab('weeklyAudit')}
             >
               <span className="tab-title">Weekly Audit</span>
               <span className="tab-caption">Cross-team review</span>
@@ -975,7 +1001,7 @@ function App() {
                       </button>
                       <button
                         className="secondary-btn"
-                        onClick={() => setActiveTab('date')}
+                        onClick={() => setActiveTab('weeklyAudit')}
                       >
                         Open Weekly Audit
                       </button>
@@ -1032,7 +1058,7 @@ function App() {
                 </section>
               )}
             </div>
-          ) : activeTab === 'date' ? (
+          ) : activeTab === 'weeklyAudit' ? (
             <section className="card">
               <div className="tab-header">
                 <div>
@@ -1148,6 +1174,8 @@ function App() {
               )}
             </section>
           ) : null}
+
+          </div>
 
           <Modal
             isOpen={registerModalOpen}
@@ -1504,7 +1532,7 @@ function App() {
               <p className="error-text">{proofPreviewError}</p>
             ) : null}
           </Modal>
-        </>
+        </section>
       )}
     </main>
   )
