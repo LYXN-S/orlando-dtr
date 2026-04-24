@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import Modal from './Modal'
+import orlandoLogo from './assets/orlando_logo.jpg'
 
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080'
@@ -92,6 +93,9 @@ function App() {
   const [isLoadingDashboard, setIsLoadingDashboard] = useState(false)
   const [isSavingCredentials, setIsSavingCredentials] = useState(false)
   const [loginForm, setLoginForm] = useState({ email: '', password: '' })
+  const [keepLoggedIn, setKeepLoggedIn] = useState(
+    () => localStorage.getItem('dtr_keep_logged_in') === 'true'
+  )
   const [loginError, setLoginError] = useState('')
   const [registerModalOpen, setRegisterModalOpen] = useState(false)
   const [credentialsModalOpen, setCredentialsModalOpen] = useState(false)
@@ -395,6 +399,11 @@ function App() {
 
       localStorage.setItem('dtr_admin_token', data.token)
       localStorage.setItem('dtr_admin_role', data.role || '')
+      if (keepLoggedIn) {
+        localStorage.setItem('dtr_keep_logged_in', 'true')
+      } else {
+        localStorage.removeItem('dtr_keep_logged_in')
+      }
       setIsLoggedIn(true)
       setLoginError('')
       return
@@ -543,11 +552,19 @@ function App() {
   const handleLogout = () => {
     localStorage.removeItem('dtr_admin_token')
     localStorage.removeItem('dtr_admin_role')
+    localStorage.removeItem('dtr_keep_logged_in')
     setIsLoggedIn(false)
     setIsLoadingDashboard(false)
     setIsSavingCredentials(false)
     setLoginForm({ email: '', password: '' })
+    setKeepLoggedIn(false)
     setActiveTab('overview')
+  }
+
+  const handleForgotPassword = (event) => {
+    event.preventDefault()
+    // Placeholder for password recovery flow
+    window.alert('Password recovery feature coming soon. Please contact your administrator.')
   }
 
   const handleCloseCredentialsModal = () => {
@@ -663,63 +680,104 @@ function App() {
       : '—'
 
   return (
-    <main className="app-shell">
-      <header className="top-bar">
-        <div>
-          <h1>Orlando DTR</h1>
-          <p>Daily time records management</p>
-        </div>
-        {isLoggedIn ? (
+    <main className={`app-shell ${!isLoggedIn ? 'login-shell' : ''}`}>
+      {isLoggedIn ? (
+        <header className="top-bar">
+          <div className="brand-lockup">
+            <img
+              src={orlandoLogo}
+              alt="Orlando logo"
+              className="brand-logo"
+            />
+            <div>
+              <h1>Orlando DTR</h1>
+              <p>Daily time records management</p>
+            </div>
+          </div>
           <button className="secondary-btn" onClick={handleLogout}>
             Logout
           </button>
-        ) : null}
-      </header>
+        </header>
+      ) : null}
 
       {!isLoggedIn ? (
         <section className="login-container">
-          <div className="card card-login">
-            <h2>Admin Login</h2>
-            <p className="helper-text">Access employee time records</p>
-            <form className="form-grid" onSubmit={handleLoginSubmit}>
-              <label>
-                Email
-                <input
-                  type="email"
-                  value={loginForm.email}
-                  onChange={(event) =>
-                    setLoginForm((current) => ({
-                      ...current,
-                      email: event.target.value,
-                    }))
-                  }
-                  placeholder="admin@orlando.com"
-                  required
-                />
-              </label>
-              <label>
-                Password
-                <input
-                  type="password"
-                  value={loginForm.password}
-                  onChange={(event) =>
-                    setLoginForm((current) => ({
-                      ...current,
-                      password: event.target.value,
-                    }))
-                  }
-                  placeholder="Enter password"
-                  required
-                />
-              </label>
-              {loginError ? <p className="error-text">{loginError}</p> : null}
-              <button type="submit" className="primary-btn" disabled={isLoggingIn}>
-                {isLoggingIn ? 'Signing In...' : 'Sign In'}
-              </button>
-            </form>
-            <p className="demo-text">
-              Use your backend admin credentials from environment configuration.
-            </p>
+          <div className="glass-login-card">
+            <div className="login-logo-section">
+              <img
+                src={orlandoLogo}
+                alt="Orlando logo"
+                className="login-logo"
+              />
+            </div>
+            
+            <div className="login-form-section">
+              <form className="glass-form" onSubmit={handleLoginSubmit}>
+                <label htmlFor="login-email" className="glass-label">
+                  <svg className="input-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                    <circle cx="12" cy="7" r="4" />
+                  </svg>
+                  <input
+                    id="login-email"
+                    type="email"
+                    value={loginForm.email}
+                    onChange={(event) =>
+                      setLoginForm((current) => ({
+                        ...current,
+                        email: event.target.value,
+                      }))
+                    }
+                    placeholder="Username"
+                    aria-required="true"
+                    required
+                  />
+                </label>
+                
+                <label htmlFor="login-password" className="glass-label">
+                  <svg className="input-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                  </svg>
+                  <input
+                    id="login-password"
+                    type="password"
+                    value={loginForm.password}
+                    onChange={(event) =>
+                      setLoginForm((current) => ({
+                        ...current,
+                        password: event.target.value,
+                      }))
+                    }
+                    placeholder="••••••••••••"
+                    aria-required="true"
+                    required
+                  />
+                </label>
+                
+                <div className="login-options">
+                  <label className="glass-checkbox-label">
+                    <input
+                      type="checkbox"
+                      id="keep-logged-in"
+                      checked={keepLoggedIn}
+                      onChange={(event) => setKeepLoggedIn(event.target.checked)}
+                      aria-label="Remember me"
+                    />
+                    <span>Remember me</span>
+                  </label>
+                  <a href="#" className="glass-forgot-link" onClick={handleForgotPassword}>
+                    Forgot Password?
+                  </a>
+                </div>
+                
+                {loginError ? <p className="glass-error-text" role="alert" aria-live="polite">{loginError}</p> : null}
+                
+                <button type="submit" className="glass-login-btn" disabled={isLoggingIn}>
+                  {isLoggingIn ? 'SIGNING IN...' : 'LOGIN'}
+                </button>
+              </form>
+            </div>
           </div>
         </section>
       ) : (
