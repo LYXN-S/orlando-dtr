@@ -682,142 +682,71 @@ function App() {
   return (
     <main className={`app-shell ${!isLoggedIn ? 'login-shell' : ''}`}>
       {isLoggedIn ? (
-        <aside className="sidebar">
-          <div className="sidebar-header">
-            <img
-              src={orlandoLogo}
-              alt="Orlando logo"
-              className="sidebar-logo"
-            />
-            <span className="sidebar-brand">Orlando DTR</span>
-          </div>
+        <>
+          <aside className="sidebar">
+            <div className="sidebar-header">
+              <img
+                src={orlandoLogo}
+                alt="Orlando logo"
+                className="sidebar-logo"
+              />
+            </div>
 
-          <nav className="sidebar-nav" aria-label="Dashboard Navigation">
-            <div className="nav-section">
-              <span className="nav-section-title">Main</span>
+            <nav className="sidebar-nav">
               <button
                 className={`nav-item ${activeTab === 'overview' ? 'active' : ''}`}
                 onClick={() => setActiveTab('overview')}
               >
-                <span>Overview</span>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <rect x="3" y="3" width="7" height="7" />
+                  <rect x="14" y="3" width="7" height="7" />
+                  <rect x="14" y="14" width="7" height="7" />
+                  <rect x="3" y="14" width="7" height="7" />
+                </svg>
+                <span>Dashboard</span>
               </button>
               <button
                 className={`nav-item ${activeTab === 'employees' ? 'active' : ''}`}
                 onClick={() => setActiveTab('employees')}
               >
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                  <circle cx="9" cy="7" r="4" />
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                </svg>
                 <span>Employees</span>
               </button>
               <button
-                className={`nav-item ${activeTab === 'weeklyAudit' ? 'active' : ''}`}
-                onClick={() => setActiveTab('weeklyAudit')}
+                className={`nav-item ${activeTab === 'date' ? 'active' : ''}`}
+                onClick={() => setActiveTab('date')}
               >
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                  <line x1="16" y1="2" x2="16" y2="6" />
+                  <line x1="8" y1="2" x2="8" y2="6" />
+                  <line x1="3" y1="10" x2="21" y2="10" />
+                </svg>
                 <span>Weekly Audit</span>
               </button>
-            </div>
-          </nav>
-        </aside>
-      ) : null}
+            </nav>
+          </aside>
 
-      {!isLoggedIn ? (
-        <section className="login-container">
-          <div className="glass-login-card">
-            <div className="login-logo-section">
-              <img
-                src={orlandoLogo}
-                alt="Orlando logo"
-                className="login-logo"
-              />
-            </div>
-            
-            <div className="login-form-section">
-              <form className="glass-form" onSubmit={handleLoginSubmit}>
-                <label htmlFor="login-email" className="glass-label">
-                  <svg className="input-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                    <circle cx="12" cy="7" r="4" />
-                  </svg>
-                  <input
-                    id="login-email"
-                    type="email"
-                    value={loginForm.email}
-                    onChange={(event) =>
-                      setLoginForm((current) => ({
-                        ...current,
-                        email: event.target.value,
-                      }))
-                    }
-                    placeholder="Username"
-                    aria-required="true"
-                    required
-                  />
-                </label>
-                
-                <label htmlFor="login-password" className="glass-label">
-                  <svg className="input-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                  </svg>
-                  <input
-                    id="login-password"
-                    type="password"
-                    value={loginForm.password}
-                    onChange={(event) =>
-                      setLoginForm((current) => ({
-                        ...current,
-                        password: event.target.value,
-                      }))
-                    }
-                    placeholder="••••••••••••"
-                    aria-required="true"
-                    required
-                  />
-                </label>
-                
-                <div className="login-options">
-                  <label className="glass-checkbox-label">
-                    <input
-                      type="checkbox"
-                      id="keep-logged-in"
-                      checked={keepLoggedIn}
-                      onChange={(event) => setKeepLoggedIn(event.target.checked)}
-                      aria-label="Remember me"
-                    />
-                    <span>Remember me</span>
-                  </label>
-                  <a href="#" className="glass-forgot-link" onClick={handleForgotPassword}>
-                    Forgot Password?
-                  </a>
-                </div>
-                
-                {loginError ? <p className="glass-error-text" role="alert" aria-live="polite">{loginError}</p> : null}
-                
-                <button type="submit" className="glass-login-btn" disabled={isLoggingIn}>
-                  {isLoggingIn ? 'SIGNING IN...' : 'LOGIN'}
-                </button>
-              </form>
-            </div>
-          </div>
-        </section>
-      ) : (
-        <section className="main-content">
-          <header className="top-header">
-            <h1>Daily Time Records</h1>
-            <div className="top-header-actions">
-              <button
-                className="primary-btn"
-                onClick={() => setRegisterModalOpen(true)}
-              >
-                + Register Employee
+          <div className="main-content">
+            <header className="top-header">
+              <h1>Orlando DTR</h1>
+              <button className="logout-btn" onClick={handleLogout}>
+                <span>Logout</span>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                  <polyline points="16 17 21 12 16 7" />
+                  <line x1="21" y1="12" x2="9" y2="12" />
+                </svg>
               </button>
-              <button className="secondary-btn" onClick={handleLogout}>
-                Logout
-              </button>
-            </div>
-          </header>
+            </header>
 
-          <div className="content-area">
-
-          <section className="navigation-strip card">
+            <div className="content-area">
+              <section className="navigation-strip card">
             <p>
               <strong>Active staff:</strong> {presentCount} present, {absentCount} absent, {employees.length} total employees.
             </p>
@@ -1175,6 +1104,7 @@ function App() {
             </section>
           ) : null}
 
+            </div>
           </div>
 
           <Modal
@@ -1532,6 +1462,86 @@ function App() {
               <p className="error-text">{proofPreviewError}</p>
             ) : null}
           </Modal>
+        </>
+      ) : (
+        <section className="login-container">
+          <div className="glass-login-card">
+            <div className="login-logo-section">
+              <img
+                src={orlandoLogo}
+                alt="Orlando logo"
+                className="login-logo"
+              />
+            </div>
+            
+            <div className="login-form-section">
+              <form className="glass-form" onSubmit={handleLoginSubmit}>
+                <label htmlFor="login-email" className="glass-label">
+                  <svg className="input-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                    <circle cx="12" cy="7" r="4" />
+                  </svg>
+                  <input
+                    id="login-email"
+                    type="email"
+                    value={loginForm.email}
+                    onChange={(event) =>
+                      setLoginForm((current) => ({
+                        ...current,
+                        email: event.target.value,
+                      }))
+                    }
+                    placeholder="Username"
+                    aria-required="true"
+                    required
+                  />
+                </label>
+                
+                <label htmlFor="login-password" className="glass-label">
+                  <svg className="input-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                  </svg>
+                  <input
+                    id="login-password"
+                    type="password"
+                    value={loginForm.password}
+                    onChange={(event) =>
+                      setLoginForm((current) => ({
+                        ...current,
+                        password: event.target.value,
+                      }))
+                    }
+                    placeholder="••••••••••••"
+                    aria-required="true"
+                    required
+                  />
+                </label>
+                
+                <div className="login-options">
+                  <label className="glass-checkbox-label">
+                    <input
+                      type="checkbox"
+                      id="keep-logged-in"
+                      checked={keepLoggedIn}
+                      onChange={(event) => setKeepLoggedIn(event.target.checked)}
+                      aria-label="Remember me"
+                    />
+                    <span>Remember me</span>
+                  </label>
+                  <a href="#" className="glass-forgot-link" onClick={handleForgotPassword}>
+                    Forgot Password?
+                  </a>
+                </div>
+                
+                {loginError ? <p className="glass-error-text" role="alert" aria-live="polite">{loginError}</p> : null}
+                
+                <button type="submit" className="glass-login-btn" disabled={isLoggingIn}>
+                  {isLoggingIn ? 'SIGNING IN...' : 'LOGIN'}
+                </button>
+              </form>
+            </div>
+          </div>
         </section>
       )}
     </main>

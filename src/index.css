@@ -92,7 +92,7 @@ html {
   position: fixed;
   left: 0;
   top: 0;
-  background: var(--accent);
+  background: var(--secondary);
   display: flex;
   flex-direction: column;
   z-index: 100;
@@ -103,29 +103,29 @@ html {
 .sidebar-header {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  padding: 2rem 1.5rem;
+  justify-content: center;
+  padding: 2rem 1.5rem 2.5rem;
 }
 
 .sidebar-logo {
-  width: 36px;
-  height: 36px;
+  width: 56px;
+  height: 56px;
   object-fit: cover;
-  border-radius: 8px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 12px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
 }
 
 .sidebar-brand {
-  font-size: 1.125rem;
-  font-weight: 700;
-  color: #ffffff;
-  letter-spacing: 0.05em;
+  display: none;
 }
 
 .sidebar-nav {
   flex: 1;
-  padding: 1rem 0;
+  padding: 0.5rem 0;
   overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
 .nav-section {
@@ -146,10 +146,10 @@ html {
 .nav-item {
   display: flex;
   align-items: center;
-  gap: 0.875rem;
+  gap: 1rem;
   width: 100%;
-  padding: 0.875rem 1.5rem;
-  margin: 0.25rem 0;
+  padding: 1rem 1.5rem;
+  margin: 0;
   background: none;
   border: none;
   color: rgba(255, 255, 255, 0.8);
@@ -165,6 +165,7 @@ html {
 .nav-item svg {
   flex-shrink: 0;
   opacity: 0.9;
+  stroke-width: 2;
 }
 
 .nav-item:hover:not(.active) {
@@ -175,7 +176,7 @@ html {
 /* Seamless Tab with Inverted Corners */
 .nav-item.active {
   background: var(--primary);
-  color: var(--secondary);
+  color: var(--accent);
   border-top-left-radius: 24px;
   border-bottom-left-radius: 24px;
   margin-right: 0;
