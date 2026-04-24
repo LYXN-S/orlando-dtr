@@ -98,6 +98,7 @@ html {
   z-index: 100;
   border-top-right-radius: 32px;
   border-bottom-right-radius: 32px;
+  overflow: hidden;
 }
 
 .sidebar-header {
@@ -105,6 +106,7 @@ html {
   align-items: center;
   justify-content: center;
   padding: 2rem 1.5rem 2.5rem;
+  flex-shrink: 0;
 }
 
 .sidebar-logo {
@@ -125,7 +127,7 @@ html {
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.25rem;
 }
 
 .nav-section {
@@ -150,30 +152,36 @@ html {
   width: 100%;
   padding: 1rem 1.5rem;
   margin: 0;
-  background: none;
+  background: transparent;
   border: none;
-  color: rgba(255, 255, 255, 0.8);
+  color: rgba(255, 255, 255, 0.7);
   font-size: 0.9375rem;
   font-weight: 500;
   font-family: inherit;
   text-align: left;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
+  z-index: 1;
 }
 
 .nav-item svg {
   flex-shrink: 0;
-  opacity: 0.9;
+  opacity: 0.85;
   stroke-width: 2;
+  transition: opacity 0.25s ease;
 }
 
 .nav-item:hover:not(.active) {
-  background: rgba(255, 255, 255, 0.08);
-  color: #ffffff;
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.95);
 }
 
-/* Seamless Tab with Inverted Corners */
+.nav-item:hover:not(.active) svg {
+  opacity: 1;
+}
+
+/* Seamless Tab with Clean Inverted Corners */
 .nav-item.active {
   background: var(--primary);
   color: var(--accent);
@@ -182,13 +190,15 @@ html {
   margin-right: 0;
   padding-right: 2rem;
   font-weight: 600;
+  z-index: 2;
 }
 
 .nav-item.active svg {
   opacity: 1;
+  stroke: var(--accent);
 }
 
-/* Inverted Corner Effect - Top */
+/* Inverted Corner Effect - Top (Clean Cutout) */
 .nav-item.active::before {
   content: '';
   position: absolute;
@@ -196,12 +206,13 @@ html {
   top: -24px;
   width: 24px;
   height: 24px;
-  background: transparent;
+  background: var(--primary);
   border-bottom-right-radius: 24px;
-  box-shadow: 0 12px 0 0 var(--primary);
+  box-shadow: 0 12px 0 0 var(--secondary);
+  z-index: -1;
 }
 
-/* Inverted Corner Effect - Bottom */
+/* Inverted Corner Effect - Bottom (Clean Cutout) */
 .nav-item.active::after {
   content: '';
   position: absolute;
@@ -209,9 +220,10 @@ html {
   bottom: -24px;
   width: 24px;
   height: 24px;
-  background: transparent;
+  background: var(--primary);
   border-top-right-radius: 24px;
-  box-shadow: 0 -12px 0 0 var(--primary);
+  box-shadow: 0 -12px 0 0 var(--secondary);
+  z-index: -1;
 }
 
 /* Main Content Area */

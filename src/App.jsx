@@ -734,7 +734,7 @@ function App() {
 
           <div className="main-content">
             <header className="top-header">
-              <h1>Orlando DTR</h1>
+              <h1>Orlando Prestige Inc.</h1>
               <button className="logout-btn" onClick={handleLogout}>
                 <span>Logout</span>
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
