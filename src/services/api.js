@@ -53,28 +53,51 @@ export const fetchAttendanceLogs = async (token) => {
 
 export const loginAdmin = async (email, password) => {
   console.log('Login URL:', `${AUTH_API_BASE_URL}/admin/login`)
-  const response = await fetch(`${AUTH_API_BASE_URL}/admin/login`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ email, password }),
-  })
+  console.log('Login payload:', { email, password: '***' })
+  
+  try {
+    const response = await fetch(`${AUTH_API_BASE_URL}/admin/login`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email, password }),
+    })
 
-  if (!response.ok) {
-    let message = 'Invalid email or password.'
-    try {
-      const errorBody = await response.json()
-      if (errorBody?.message) {
-        message = errorBody.message
+    console.log('Login response status:', response.status)
+    console.log('Login response headers:', Object.fromEntries(response.headers.entries()))
+
+    if (!response.ok) {
+      let message = 'Invalid email or password.'
+      let errorBody = null
+      
+      try {
+        const contentType = response.headers.get('content-type')
+        if (contentType && contentType.includes('application/json')) {
+          errorBody = await response.json()
+          console.log('Login error body:', errorBody)
+          if (errorBody?.message) {
+            message = errorBody.message
+          }
+        } else {
+          const textBody = await response.text()
+          console.log('Login error text:', textBody)
+          if (textBody) {
+            message = textBody
+          }
+        }
+      } catch (parseError) {
+        console.error('Error parsing login error response:', parseError)
       }
-    } catch {
-      // Ignore
+      
+      throw new Error(message)
     }
-    throw new Error(message)
-  }
 
-  return response.json()
+    return response.json()
+  } catch (error) {
+    console.error('Login request failed:', error)
+    throw error
+  }
 }
 
 export const registerEmployee = async (token, employeeData) => {
