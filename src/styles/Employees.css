@@ -207,6 +207,13 @@
     0 6px 20px rgba(139, 94, 60, 0.18),
     0 0 0 3px rgba(139, 94, 60, 0.06);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+}
+
+.employee-card-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .employee-card:hover .employee-card-avatar {
@@ -315,6 +322,13 @@
   font-size: 1rem;
   font-weight: 700;
   flex-shrink: 0;
+  overflow: hidden;
+}
+
+.table-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 /* Employee Details */
@@ -366,6 +380,13 @@
   font-weight: 700;
   flex-shrink: 0;
   box-shadow: 0 4px 16px rgba(139, 94, 60, 0.2);
+  overflow: hidden;
+}
+
+.employee-detail-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .employee-detail-info h2 {

@@ -52,11 +52,11 @@ export const fetchAttendanceLogs = async (token) => {
 }
 
 export const loginAdmin = async (email, password) => {
-  console.log('Login URL:', `${AUTH_API_BASE_URL}/admin/login`)
+  console.log('Login URL:', `${AUTH_API_BASE_URL}/auth/login`)
   console.log('Login payload:', { email, password: '***' })
   
   try {
-    const response = await fetch(`${AUTH_API_BASE_URL}/admin/login`, {
+    const response = await fetch(`${AUTH_API_BASE_URL}/auth/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -186,6 +186,20 @@ export const fetchProofImage = async (token, proofUrl) => {
 
   if (!response.ok) {
     throw new Error('Failed to fetch proof image.')
+  }
+
+  return response.blob()
+}
+
+export const fetchAuthenticatedImage = async (imageUrl, token) => {
+  const response = await fetch(imageUrl, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch image.')
   }
 
   return response.blob()

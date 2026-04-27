@@ -1,3 +1,44 @@
+import { useState, useEffect } from 'react'
+import { resolveProofUrl, fetchAuthenticatedImage } from '../services/api'
+import { getCookie } from '../utils/cookies'
+
+function AvatarImage({ employee, className, size = 'medium' }) {
+  const [avatarBlobUrl, setAvatarBlobUrl] = useState('')
+
+  useEffect(() => {
+    if (employee?.avatarUrl) {
+      const token = getCookie('dtr_admin_token')
+      if (token) {
+        const fullUrl = resolveProofUrl(employee.avatarUrl)
+        fetchAuthenticatedImage(fullUrl, token)
+          .then(blob => {
+            const url = URL.createObjectURL(blob)
+            setAvatarBlobUrl(url)
+          })
+          .catch(err => {
+            console.error('Failed to load avatar:', err)
+          })
+      }
+    }
+
+    return () => {
+      if (avatarBlobUrl) {
+        URL.revokeObjectURL(avatarBlobUrl)
+      }
+    }
+  }, [employee?.avatarUrl])
+
+  if (avatarBlobUrl) {
+    return <img src={avatarBlobUrl} alt={`${employee.firstName} ${employee.lastName}`} />
+  }
+
+  return (
+    <span>
+      {employee.firstName.charAt(0)}{employee.lastName.charAt(0)}
+    </span>
+  )
+}
+
 export default function EmployeesList({
   employees,
   employeeStatus,
@@ -101,7 +142,7 @@ export default function EmployeesList({
                 onClick={() => setSelectedEmployeeId(emp.id)}
               >
                 <div className="employee-card-avatar">
-                  {emp.firstName.charAt(0)}{emp.lastName.charAt(0)}
+                  <AvatarImage employee={emp} />
                 </div>
                 <div className="employee-card-info">
                   <h3>{`${emp.firstName} ${emp.lastName}`}</h3>
@@ -141,7 +182,7 @@ export default function EmployeesList({
                     <td>
                       <div className="table-employee-info">
                         <div className="table-avatar">
-                          {emp.firstName.charAt(0)}{emp.lastName.charAt(0)}
+                          <AvatarImage employee={emp} />
                         </div>
                         <span>{`${emp.firstName} ${emp.lastName}`}</span>
                       </div>

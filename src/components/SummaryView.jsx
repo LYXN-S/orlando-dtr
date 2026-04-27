@@ -1,3 +1,5 @@
+import { useState } from 'react'
+
 export default function SummaryView({
   logs,
   summarySearch,
@@ -13,6 +15,8 @@ export default function SummaryView({
   formatDate,
   formatTimeShort,
 }) {
+  const [isExporting, setIsExporting] = useState(false)
+
   const calculateDuration = (timeIn, timeOut) => {
     if (!timeIn || !timeOut) return '—'
     const start = new Date(timeIn)
@@ -22,6 +26,58 @@ export default function SummaryView({
     const hours = Math.floor(diff / (1000 * 60 * 60))
     const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
     return `${hours}h ${minutes}m`
+  }
+
+  const handleExportPDF = async () => {
+    try {
+      setIsExporting(true)
+      
+      const token = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('dtr_admin_token='))
+        ?.split('=')[1]
+
+      if (!token) {
+        alert('Authentication token not found. Please log in again.')
+        return
+      }
+
+      // Build URL with search parameter if present
+      let url = `https://api.orlandoprestige.com/api/v1/admin/dtr/attendance/export-pdf?startDate=${selectedDate}&endDate=${toDate}`
+      if (summarySearch.trim()) {
+        url += `&search=${encodeURIComponent(summarySearch.trim())}`
+      }
+
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to generate PDF')
+      }
+
+      const blob = await response.blob()
+      const blobUrl = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = blobUrl
+      
+      // Include search term in filename if present
+      const searchSuffix = summarySearch.trim() ? `_${summarySearch.trim().replace(/\s+/g, '_')}` : ''
+      a.download = `attendance_summary_${selectedDate}_to_${toDate}${searchSuffix}.pdf`
+      
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(blobUrl)
+      document.body.removeChild(a)
+    } catch (error) {
+      console.error('Error exporting PDF:', error)
+      alert('Failed to export PDF. Please try again.')
+    } finally {
+      setIsExporting(false)
+    }
   }
 
   return (
@@ -66,6 +122,31 @@ export default function SummaryView({
             </button>
           )}
         </div>
+
+        <button 
+          className="export-pdf-btn" 
+          onClick={handleExportPDF} 
+          disabled={logs.length === 0 || isExporting}
+        >
+          {isExporting ? (
+            <>
+              <svg className="spinner" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="12" r="10" opacity="0.25" />
+                <path d="M12 2 A10 10 0 0 1 22 12" strokeLinecap="round" />
+              </svg>
+              Exporting...
+            </>
+          ) : (
+            <>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="7 10 12 15 17 10" />
+                <line x1="12" y1="15" x2="12" y2="3" />
+              </svg>
+              Export PDF
+            </>
+          )}
+        </button>
       </div>
 
       {logs.length > 0 ? (

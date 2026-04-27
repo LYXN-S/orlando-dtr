@@ -292,6 +292,22 @@ function App() {
   const handleAvatarChange = (event) => {
     const file = event.target.files?.[0]
     if (file) {
+      // Validate file type
+      const validTypes = ['image/png', 'image/jpeg', 'image/jpg']
+      if (!validTypes.includes(file.type)) {
+        window.alert('Please upload only PNG or JPEG images.')
+        event.target.value = '' // Reset input
+        return
+      }
+      
+      // Validate file size (max 5MB)
+      const maxSize = 5 * 1024 * 1024 // 5MB in bytes
+      if (file.size > maxSize) {
+        window.alert('File size must be less than 5MB.')
+        event.target.value = '' // Reset input
+        return
+      }
+      
       if (profileAvatarPreview) {
         URL.revokeObjectURL(profileAvatarPreview)
       }

@@ -1,4 +1,6 @@
-import { resolveProofUrl } from '../services/api'
+import { useState, useEffect } from 'react'
+import { resolveProofUrl, fetchAuthenticatedImage } from '../services/api'
+import { getCookie } from '../utils/cookies'
 
 export default function ProfileModal({
   employee,
@@ -9,6 +11,31 @@ export default function ProfileModal({
   isSavingCredentials,
   handleSaveCredentials,
 }) {
+  const [avatarBlobUrl, setAvatarBlobUrl] = useState('')
+
+  useEffect(() => {
+    if (employee?.avatarUrl && !profileAvatarPreview) {
+      const token = getCookie('dtr_admin_token')
+      if (token) {
+        const fullUrl = resolveProofUrl(employee.avatarUrl)
+        fetchAuthenticatedImage(fullUrl, token)
+          .then(blob => {
+            const url = URL.createObjectURL(blob)
+            setAvatarBlobUrl(url)
+          })
+          .catch(err => {
+            console.error('Failed to load avatar:', err)
+          })
+      }
+    }
+
+    return () => {
+      if (avatarBlobUrl) {
+        URL.revokeObjectURL(avatarBlobUrl)
+      }
+    }
+  }, [employee?.avatarUrl, profileAvatarPreview])
+
   if (!employee) return null
 
   return (
@@ -18,8 +45,8 @@ export default function ProfileModal({
         <div className="profile-avatar-xl">
           {profileAvatarPreview ? (
             <img src={profileAvatarPreview} alt="Profile" />
-          ) : employee.avatarUrl ? (
-            <img src={resolveProofUrl(employee.avatarUrl)} alt="Profile" />
+          ) : avatarBlobUrl ? (
+            <img src={avatarBlobUrl} alt="Profile" />
           ) : (
             <span>{employee.firstName.charAt(0)}{employee.lastName.charAt(0)}</span>
           )}
@@ -27,7 +54,7 @@ export default function ProfileModal({
         <input
           type="file"
           id="avatar-upload"
-          accept="image/*"
+          accept="image/png,image/jpeg,image/jpg"
           onChange={handleAvatarChange}
           style={{ display: 'none' }}
         />

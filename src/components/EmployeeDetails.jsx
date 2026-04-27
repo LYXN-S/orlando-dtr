@@ -1,3 +1,7 @@
+import { useState, useEffect } from 'react'
+import { resolveProofUrl, fetchAuthenticatedImage } from '../services/api'
+import { getCookie } from '../utils/cookies'
+
 export default function EmployeeDetails({
   employee,
   logs,
@@ -7,6 +11,31 @@ export default function EmployeeDetails({
   formatDate,
   formatTimeShort,
 }) {
+  const [avatarBlobUrl, setAvatarBlobUrl] = useState('')
+
+  useEffect(() => {
+    if (employee?.avatarUrl) {
+      const token = getCookie('dtr_admin_token')
+      if (token) {
+        const fullUrl = resolveProofUrl(employee.avatarUrl)
+        fetchAuthenticatedImage(fullUrl, token)
+          .then(blob => {
+            const url = URL.createObjectURL(blob)
+            setAvatarBlobUrl(url)
+          })
+          .catch(err => {
+            console.error('Failed to load avatar:', err)
+          })
+      }
+    }
+
+    return () => {
+      if (avatarBlobUrl) {
+        URL.revokeObjectURL(avatarBlobUrl)
+      }
+    }
+  }, [employee?.avatarUrl])
+
   if (!employee) {
     return <p className="empty-state">Employee not found.</p>
   }
@@ -35,7 +64,11 @@ export default function EmployeeDetails({
       <div className="employee-detail-header">
         <div className="employee-detail-info">
           <div className="employee-detail-avatar">
-            {employee.firstName.charAt(0)}{employee.lastName.charAt(0)}
+            {avatarBlobUrl ? (
+              <img src={avatarBlobUrl} alt={`${employee.firstName} ${employee.lastName}`} />
+            ) : (
+              <span>{employee.firstName.charAt(0)}{employee.lastName.charAt(0)}</span>
+            )}
           </div>
           <div>
             <h2>{`${employee.firstName} ${employee.lastName}`}</h2>
