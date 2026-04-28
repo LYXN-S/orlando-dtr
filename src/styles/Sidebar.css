@@ -152,3 +152,68 @@
   opacity: 1;
   stroke: #e74c3c;
 }
+
+/* ── Mobile sidebar ── */
+@media (max-width: 768px) {
+  .sidebar {
+    width: 100%;
+    height: auto;
+    position: fixed;
+    left: 0;
+    bottom: 0;
+    top: auto;
+    flex-direction: row;
+    border-radius: 0;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    z-index: 200;
+    padding: 0;
+  }
+
+  .sidebar-header {
+    display: none;
+  }
+
+  .sidebar-nav {
+    flex-direction: row;
+    flex: 1;
+    padding: 0;
+    gap: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .sidebar-nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .sidebar-nav-item {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 10px 8px;
+    font-size: 10px;
+    flex: 1;
+    min-width: 60px;
+    border-radius: 0;
+    margin: 0;
+  }
+
+  .sidebar-nav-item.active {
+    background: rgba(255,255,255,0.12);
+    border-radius: 0;
+    margin-right: 0;
+    padding-right: 8px;
+    box-shadow: none;
+    border-top: 2px solid var(--accent);
+  }
+
+  .sidebar-nav-item.active::before,
+  .sidebar-nav-item.active::after {
+    display: none;
+  }
+
+  .sidebar-footer {
+    display: none;
+  }
+}
