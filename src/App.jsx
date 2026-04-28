@@ -6,6 +6,7 @@ import Dashboard from './components/Dashboard'
 import EmployeesList from './components/EmployeesList'
 import EmployeeDetails from './components/EmployeeDetails'
 import SummaryView from './components/SummaryView'
+import Maintenance from './components/Maintenance'
 import RegisterEmployeeModal from './components/RegisterEmployeeModal'
 import ProfileModal from './components/ProfileModal'
 import { setCookie, getCookie, deleteCookie } from './utils/cookies'
@@ -35,6 +36,7 @@ import './styles/Dashboard.css'
 import './styles/Employees.css'
 import './styles/Summary.css'
 import './styles/Modal.css'
+import './styles/Maintenance.css'
 
 function App() {
   // Auth state
@@ -467,6 +469,8 @@ function App() {
               formatTimeShort={formatTimeShort}
             />
           )
+        ) : activeTab === 'maintenance' ? (
+          <Maintenance employees={employees} />
         ) : (
           <SummaryView
             logs={paginatedSummaryLogs}
