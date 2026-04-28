@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import orlandoLogo from '../assets/orlando_logo.jpg'
+import { AUTH_API_BASE_URL } from '../utils/constants'
 
 export default function Login({
   loginForm,
@@ -12,6 +13,16 @@ export default function Login({
   handleForgotPassword,
 }) {
   const [showPassword, setShowPassword] = useState(false)
+  const [downloadUrl, setDownloadUrl] = useState(null)
+
+  useEffect(() => {
+    fetch(`${AUTH_API_BASE_URL}/app/download`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.available === 'true' && data.url) setDownloadUrl(data.url)
+      })
+      .catch(() => {})
+  }, [])
 
   const inputStyle = {
     height: '46px',
@@ -250,6 +261,43 @@ export default function Login({
                       </>
                     ) : 'Sign In'}
                   </button>
+
+                  {/* Download App Button */}
+                  {downloadUrl && (
+                    <a
+                      href={downloadUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        height: '46px',
+                        width: '100%',
+                        borderRadius: '10px',
+                        background: 'rgba(255,255,255,0.15)',
+                        border: '1.5px solid rgba(255,255,255,0.4)',
+                        color: '#ffffff',
+                        fontSize: '14px',
+                        fontWeight: '600',
+                        letterSpacing: '0.04em',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '8px',
+                        textDecoration: 'none',
+                        transition: 'background 0.2s',
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.25)'}
+                      onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.15)'}
+                    >
+                      {/* Download icon */}
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                        <polyline points="7 10 12 15 17 10" />
+                        <line x1="12" y1="15" x2="12" y2="3" />
+                      </svg>
+                      Download Mobile App
+                    </a>
+                  )}
                 </form>
 
               </div>
