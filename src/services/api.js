@@ -204,3 +204,67 @@ export const fetchAuthenticatedImage = async (imageUrl, token) => {
 
   return response.blob()
 }
+
+export const fetchRoles = async (token) => {
+  console.log('Fetching from:', `${AUTH_API_BASE_URL}/admin/roles`)
+  const response = await fetch(`${AUTH_API_BASE_URL}/admin/roles`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+
+  if (!response.ok) {
+    const errorText = await response.text()
+    console.error('Fetch roles error:', response.status, errorText)
+    throw new Error(`Failed to fetch roles: ${response.status}`)
+  }
+
+  return response.json()
+}
+
+export const verifyPassword = async (token, password) => {
+  console.log('Verifying password at:', `${AUTH_API_BASE_URL}/auth/verify-password`)
+  
+  try {
+    const response = await fetch(`${AUTH_API_BASE_URL}/auth/verify-password`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify({ password }),
+    })
+
+    console.log('Verify password response status:', response.status)
+
+    if (!response.ok) {
+      let message = 'Incorrect password. Please try again.'
+      
+      try {
+        const contentType = response.headers.get('content-type')
+        if (contentType && contentType.includes('application/json')) {
+          const errorBody = await response.json()
+          console.log('Verify password error body:', errorBody)
+          if (errorBody?.message) {
+            message = errorBody.message
+          }
+        } else {
+          const textBody = await response.text()
+          console.log('Verify password error text:', textBody)
+          if (textBody) {
+            message = textBody
+          }
+        }
+      } catch (parseError) {
+        console.error('Error parsing verify password error response:', parseError)
+      }
+      
+      throw new Error(message)
+    }
+
+    return response.json()
+  } catch (error) {
+    console.error('Verify password request failed:', error)
+    throw error
+  }
+}

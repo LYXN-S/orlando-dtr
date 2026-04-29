@@ -6,9 +6,12 @@ import Dashboard from './components/Dashboard'
 import EmployeesList from './components/EmployeesList'
 import EmployeeDetails from './components/EmployeeDetails'
 import SummaryView from './components/SummaryView'
-import Maintenance from './components/Maintenance'
+import MaintenanceWithSudoMode from './components/MaintenanceWithSudoMode'
 import RegisterEmployeeModal from './components/RegisterEmployeeModal'
 import ProfileModal from './components/ProfileModal'
+import ConfirmDiscardModal from './components/ConfirmDiscardModal'
+import Toast from './components/Toast'
+import ZoomableImage from './components/ZoomableImage'
 import { setCookie, getCookie, deleteCookie } from './utils/cookies'
 import { 
   MANILA_DATE_KEY_FORMATTER, 
@@ -37,6 +40,8 @@ import './styles/Employees.css'
 import './styles/Summary.css'
 import './styles/Modal.css'
 import './styles/Maintenance.css'
+import './styles/SudoMode.css'
+import './styles/Toast.css'
 
 function App() {
   // Auth state
@@ -48,6 +53,10 @@ function App() {
   const [keepLoggedIn, setKeepLoggedIn] = useState(() => getCookie('dtr_keep_logged_in') === 'true')
   const [loginError, setLoginError] = useState('')
 
+  // Toast notification state
+  const [toast, setToast] = useState({ isVisible: false, message: '', type: 'success' })
+  const [newEmployeeId, setNewEmployeeId] = useState(null)
+
   // Loading states
   const [isRegistering, setIsRegistering] = useState(false)
   const [isSavingCredentials, setIsSavingCredentials] = useState(false)
@@ -55,6 +64,8 @@ function App() {
 
   // Modal states
   const [registerModalOpen, setRegisterModalOpen] = useState(false)
+  const [registerFormHasChanges, setRegisterFormHasChanges] = useState(false)
+  const [showRegisterConfirmClose, setShowRegisterConfirmClose] = useState(false)
   const [credentialsModalOpen, setCredentialsModalOpen] = useState(false)
   const [viewingCredentialsEmployeeId, setViewingCredentialsEmployeeId] = useState(null)
   const [proofPreviewOpen, setProofPreviewOpen] = useState(false)
@@ -250,33 +261,73 @@ function App() {
     window.alert('Password recovery feature coming soon. Please contact your administrator.')
   }
 
-  const handleRegisterEmployee = async (event) => {
+  const handleRegisterEmployee = async (event, formData) => {
     event.preventDefault()
     const token = getCookie('dtr_admin_token')
     if (!token) {
-      window.alert('Admin session expired. Please login again.')
+      setToast({ isVisible: true, message: 'Admin session expired. Please login again.', type: 'error' })
       return
     }
 
     setIsRegistering(true)
     try {
-      const newEmployee = await registerEmployee(token, {
+      const dataToSubmit = formData || {
         email: registerForm.email.trim().toLowerCase(),
         firstName: registerForm.firstName.trim(),
         lastName: registerForm.lastName.trim(),
         position: registerForm.position.trim(),
         contactNumber: registerForm.contactNumber.trim(),
         address: registerForm.address.trim(),
-      })
+      }
+
+      const newEmployee = await registerEmployee(token, dataToSubmit)
 
       setEmployees((current) => [...current, newEmployee])
       setRegisterForm({ email: '', firstName: '', lastName: '', position: '', contactNumber: '', address: '' })
       setRegisterModalOpen(false)
+      setRegisterFormHasChanges(false)
+      
+      // Show success toast and highlight new employee
+      setToast({ 
+        isVisible: true, 
+        message: `✅ ${newEmployee.firstName} ${newEmployee.lastName} successfully registered!`, 
+        type: 'success' 
+      })
+      setNewEmployeeId(newEmployee.id)
+      
+      // Remove highlight after 3 seconds
+      setTimeout(() => {
+        setNewEmployeeId(null)
+      }, 3000)
     } catch (error) {
-      window.alert(error.message)
+      setToast({ isVisible: true, message: error.message, type: 'error' })
     } finally {
       setIsRegistering(false)
     }
+  }
+
+  const handleCloseRegisterModal = () => {
+    if (registerFormHasChanges) {
+      setShowRegisterConfirmClose(true)
+    } else {
+      setRegisterModalOpen(false)
+      setRegisterForm({ email: '', firstName: '', lastName: '', position: '', contactNumber: '', address: '' })
+    }
+  }
+
+  const handleRegisterModalEscape = () => {
+    handleCloseRegisterModal()
+  }
+
+  const handleKeepEditingRegister = () => {
+    setShowRegisterConfirmClose(false)
+  }
+
+  const handleDiscardRegisterChanges = () => {
+    setShowRegisterConfirmClose(false)
+    setRegisterModalOpen(false)
+    setRegisterFormHasChanges(false)
+    setRegisterForm({ email: '', firstName: '', lastName: '', position: '', contactNumber: '', address: '' })
   }
 
   const handleCloseCredentialsModal = () => {
@@ -467,10 +518,11 @@ function App() {
               setRegisterModalOpen={setRegisterModalOpen}
               setSelectedEmployeeId={setSelectedEmployeeId}
               formatTimeShort={formatTimeShort}
+              newEmployeeId={newEmployeeId}
             />
           )
         ) : activeTab === 'maintenance' ? (
-          <Maintenance employees={employees} />
+          <MaintenanceWithSudoMode employees={employees} />
         ) : (
           <SummaryView
             logs={paginatedSummaryLogs}
@@ -490,14 +542,28 @@ function App() {
         )}
       </section>
 
-      <Modal isOpen={registerModalOpen} onClose={() => setRegisterModalOpen(false)} title="Register New Employee">
+      <Modal 
+        isOpen={registerModalOpen} 
+        onClose={handleCloseRegisterModal}
+        onEscapeKey={handleRegisterModalEscape}
+        disableBackdropClick={true}
+        title="Register New Employee"
+      >
         <RegisterEmployeeModal
           registerForm={registerForm}
           setRegisterForm={setRegisterForm}
           isRegistering={isRegistering}
           handleRegisterEmployee={handleRegisterEmployee}
+          onCancel={handleCloseRegisterModal}
+          onFormChangeDetected={setRegisterFormHasChanges}
         />
       </Modal>
+
+      <ConfirmDiscardModal
+        isOpen={showRegisterConfirmClose}
+        onKeepEditing={handleKeepEditingRegister}
+        onDiscard={handleDiscardRegisterChanges}
+      />
 
       <Modal isOpen={credentialsModalOpen} onClose={handleCloseCredentialsModal} title="Employee Profile">
         <ProfileModal
@@ -522,24 +588,7 @@ function App() {
             <p>{proofPreviewError}</p>
           </div>
         ) : (
-          <div className="proof-preview-container">
-            <img src={proofPreviewUrl} alt="Attendance Proof" className="proof-preview-image" />
-            <button
-              className="fullscreen-toggle-btn"
-              onClick={() => setIsProofFullscreen(!isProofFullscreen)}
-              aria-label={isProofFullscreen ? "Exit fullscreen" : "View fullscreen"}
-            >
-              {isProofFullscreen ? (
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3" />
-                </svg>
-              ) : (
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
-                </svg>
-              )}
-            </button>
-          </div>
+          <ZoomableImage src={proofPreviewUrl} alt="Attendance Proof" />
         )}
       </Modal>
 
@@ -555,14 +604,16 @@ function App() {
               <line x1="6" y1="6" x2="18" y2="18" />
             </svg>
           </button>
-          <img
-            src={proofPreviewUrl}
-            alt="Attendance Proof Fullscreen"
-            className="fullscreen-image"
-            onClick={(e) => e.stopPropagation()}
-          />
+          <ZoomableImage src={proofPreviewUrl} alt="Attendance Proof Fullscreen" />
         </div>
       )}
+
+      <Toast
+        message={toast.message}
+        type={toast.type}
+        isVisible={toast.isVisible}
+        onClose={() => setToast({ ...toast, isVisible: false })}
+      />
     </main>
   )
 }

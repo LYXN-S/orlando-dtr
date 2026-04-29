@@ -1,8 +1,47 @@
-export default function Modal({ isOpen, onClose, title, children, showBackButton, onBack }) {
+import { useEffect } from 'react'
+
+export default function Modal({ 
+  isOpen, 
+  onClose, 
+  title, 
+  children, 
+  showBackButton, 
+  onBack,
+  disableBackdropClick = false,
+  onEscapeKey
+}) {
+  useEffect(() => {
+    if (!isOpen) return
+
+    const handleEscape = (e) => {
+      if (e.key === 'Escape') {
+        // If custom escape handler provided, use it; otherwise use default onClose
+        if (onEscapeKey) {
+          onEscapeKey()
+        } else {
+          onClose()
+        }
+      }
+    }
+
+    document.addEventListener('keydown', handleEscape)
+    return () => document.removeEventListener('keydown', handleEscape)
+  }, [isOpen, onClose, onEscapeKey])
+
   if (!isOpen) return null
 
+  const handleOverlayClick = (e) => {
+    // Only close if the click is directly on the overlay (not bubbled from content)
+    if (e.target === e.currentTarget && !disableBackdropClick) {
+      onClose()
+    }
+  }
+
   return (
-    <div className="modal-overlay" onClick={onClose}>
+    <div 
+      className={`modal-overlay ${disableBackdropClick ? 'no-backdrop-close' : ''}`}
+      onClick={handleOverlayClick}
+    >
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           {showBackButton && onBack && (
