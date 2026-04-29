@@ -1,0 +1,369 @@
+/* Maintenance Wrapper - Blurred Background */
+.sudo-maintenance-wrapper {
+  transition: all 0.3s ease;
+}
+
+.sudo-maintenance-wrapper.sudo-locked {
+  filter: blur(8px);
+  opacity: 0.5;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* Modal Overlay - Only covers main content area, not sidebar */
+.sudo-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 240px; /* Sidebar width */
+  right: 0;
+  bottom: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
+  padding: 2rem;
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Sudo Mode Container - REMOVED (no longer needed) */
+
+/* Sudo Mode Card - Compact version */
+.sudo-mode-card {
+  background: white;
+  border-radius: 16px;
+  padding: 1.5rem 2rem;
+  max-width: 440px;
+  width: 100%;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.12);
+  text-align: center;
+  animation: sudoSlideIn 0.4s ease-out;
+}
+
+@keyframes sudoSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Sudo Mode Icon - Compact version */
+.sudo-mode-icon {
+  width: 70px;
+  height: 70px;
+  margin: 0 auto 1rem;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #fff5f5 0%, #ffe6e6 100%);
+  border: 3px solid #ff4444;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: iconBounce 0.6s ease-out;
+}
+
+@keyframes iconBounce {
+  0% {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.sudo-mode-icon svg {
+  stroke: #ff4444;
+  filter: drop-shadow(0 2px 4px rgba(255, 68, 68, 0.2));
+}
+
+/* Sudo Mode Title - Compact version */
+.sudo-mode-title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #1a1a1a;
+  margin-bottom: 0.5rem;
+  letter-spacing: -0.5px;
+}
+
+/* Sudo Mode Description - Compact version */
+.sudo-mode-description {
+  font-size: 0.9rem;
+  color: #666;
+  line-height: 1.5;
+  margin-bottom: 1.5rem;
+  font-weight: 400;
+}
+
+/* Sudo Mode Form - Compact version */
+.sudo-mode-form {
+  margin-bottom: 1.25rem;
+}
+
+.sudo-form-group {
+  margin-bottom: 0;
+  text-align: left;
+  min-height: 140px; /* Fixed height to prevent stretching */
+  display: flex;
+  flex-direction: column;
+}
+
+.sudo-form-group label {
+  display: block;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+}
+
+/* Sudo Password Input Wrapper */
+.sudo-password-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+/* Sudo Input - Compact version */
+.sudo-input {
+  width: 100%;
+  padding: 0.75rem 3rem 0.75rem 1rem;
+  border: 2px solid #e0e0e0;
+  border-radius: 10px;
+  font-size: 0.9375rem;
+  transition: all 0.2s ease;
+  background: white;
+  font-family: inherit;
+}
+
+.sudo-input:focus {
+  outline: none;
+  border-color: #d4af37;
+  box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.1);
+}
+
+.sudo-input.error {
+  border-color: #ff4444;
+  background: #fff5f5;
+}
+
+.sudo-input.error:focus {
+  border-color: #ff4444;
+  box-shadow: 0 0 0 4px rgba(255, 68, 68, 0.1);
+}
+
+.sudo-input:disabled {
+  background: #f5f5f5;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Sudo Password Toggle Button */
+.sudo-password-toggle {
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  padding: 0.5rem;
+  cursor: pointer;
+  color: #666;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.sudo-password-toggle:hover:not(:disabled) {
+  background: rgba(212, 175, 55, 0.1);
+  color: #d4af37;
+}
+
+.sudo-password-toggle:active:not(:disabled) {
+  transform: translateY(-50%) scale(0.95);
+}
+
+.sudo-password-toggle:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.sudo-password-toggle svg {
+  display: block;
+  flex-shrink: 0;
+}
+
+/* Sudo Error Message - Fixed height to prevent stretching */
+.sudo-error-message {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  padding: 0.625rem 0.875rem;
+  background: linear-gradient(135deg, #fff5f5 0%, #ffe6e6 100%);
+  border: 2px solid #ff4444;
+  border-radius: 8px;
+  color: #cc0000;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  animation: errorShake 0.4s ease-out;
+  min-height: 38px; /* Fixed minimum height */
+}
+
+@keyframes errorShake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-8px);
+  }
+  75% {
+    transform: translateX(8px);
+  }
+}
+
+.sudo-error-message svg {
+  flex-shrink: 0;
+  stroke: #ff4444;
+}
+
+/* Sudo Submit Button - Compact version */
+.sudo-submit-btn {
+  width: 100%;
+  padding: 0.875rem 1.5rem;
+  background: linear-gradient(135deg, #d4af37 0%, #c9a961 100%);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.625rem;
+  box-shadow: 0 4px 16px rgba(212, 175, 55, 0.3);
+  letter-spacing: 0.3px;
+}
+
+.sudo-submit-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #c9a961 0%, #b8984a 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(212, 175, 55, 0.4);
+}
+
+.sudo-submit-btn:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 2px 12px rgba(212, 175, 55, 0.3);
+}
+
+.sudo-submit-btn:disabled {
+  background: linear-gradient(135deg, #ccc 0%, #999 100%);
+  cursor: not-allowed;
+  opacity: 0.6;
+  box-shadow: none;
+  transform: none;
+}
+
+.sudo-submit-btn svg {
+  flex-shrink: 0;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
+}
+
+/* Sudo Spinner */
+.sudo-spinner {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: sudoSpin 0.6s linear infinite;
+}
+
+@keyframes sudoSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Sudo Mode Warning - Compact version */
+.sudo-mode-warning {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: linear-gradient(135deg, #fff8e1 0%, #ffecb3 100%);
+  border: 2px solid #ffc107;
+  border-radius: 10px;
+  color: #856404;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.sudo-mode-warning svg {
+  flex-shrink: 0;
+  stroke: #ffc107;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .sudo-modal-overlay {
+    left: 0; /* Full width on mobile since sidebar is at bottom */
+    padding: 1rem;
+  }
+
+  .sudo-mode-card {
+    padding: 1.5rem 1.25rem;
+  }
+
+  .sudo-mode-icon {
+    width: 60px;
+    height: 60px;
+  }
+
+  .sudo-mode-icon svg {
+    width: 40px;
+    height: 40px;
+  }
+
+  .sudo-mode-title {
+    font-size: 1.25rem;
+  }
+
+  .sudo-mode-description {
+    font-size: 0.875rem;
+  }
+
+  .sudo-submit-btn {
+    padding: 0.75rem 1.25rem;
+    font-size: 0.875rem;
+  }
+
+  .sudo-mode-warning {
+    flex-direction: column;
+    text-align: center;
+    gap: 0.5rem;
+  }
+}

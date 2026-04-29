@@ -35,6 +35,47 @@
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
+  position: relative;
+}
+
+.sidebar-nav-indicator {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  background: var(--primary);
+  border-radius: 0;
+  border-top-left-radius: 24px;
+  border-bottom-left-radius: 24px;
+  margin-right: -28px;
+  padding-right: 2.5rem;
+  box-shadow: 0 10px 24px rgba(45, 31, 20, 0.12);
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), height 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.sidebar-nav-indicator::before,
+.sidebar-nav-indicator::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  width: 28px;
+  height: 28px;
+  background: transparent;
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sidebar-nav-indicator::before {
+  top: -28px;
+  border-bottom-right-radius: 28px;
+  box-shadow: 14px 14px 0 14px var(--primary);
+}
+
+.sidebar-nav-indicator::after {
+  bottom: -28px;
+  border-top-right-radius: 28px;
+  box-shadow: 14px -14px 0 14px var(--primary);
 }
 
 .sidebar-nav-item {
@@ -75,42 +116,15 @@
 
 .sidebar-nav-item.active {
   position: relative;
-  background: var(--primary);
+  background: transparent;
   color: var(--accent);
-  border-radius: 0;
-  border-top-left-radius: 24px;
-  border-bottom-left-radius: 24px;
   margin-right: -28px;
   padding-right: 2.5rem;
-  box-shadow: 0 10px 24px rgba(45, 31, 20, 0.12);
 }
 
 .sidebar-nav-item.active svg {
   opacity: 1;
   stroke: var(--accent);
-}
-
-.sidebar-nav-item.active::before,
-.sidebar-nav-item.active::after {
-  content: '';
-  position: absolute;
-  right: 0;
-  width: 28px;
-  height: 28px;
-  background: transparent;
-  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.sidebar-nav-item.active::before {
-  top: -28px;
-  border-bottom-right-radius: 28px;
-  box-shadow: 14px 14px 0 14px var(--primary);
-}
-
-.sidebar-nav-item.active::after {
-  bottom: -28px;
-  border-top-right-radius: 28px;
-  box-shadow: 14px -14px 0 14px var(--primary);
 }
 
 .sidebar-footer {
@@ -180,6 +194,11 @@
     gap: 0;
     overflow-x: auto;
     scrollbar-width: none;
+    position: static;
+  }
+
+  .sidebar-nav-indicator {
+    display: none;
   }
 
   .sidebar-nav::-webkit-scrollbar {

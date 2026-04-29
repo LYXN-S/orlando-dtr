@@ -13,6 +13,14 @@
   animation: fadeIn 0.2s ease;
 }
 
+.modal-overlay.no-backdrop-close {
+  cursor: default;
+}
+
+.modal-overlay:not(.no-backdrop-close) {
+  cursor: pointer;
+}
+
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -82,11 +90,18 @@
   color: var(--muted);
   cursor: pointer;
   transition: all 0.2s ease;
+  flex-shrink: 0;
+  z-index: 10;
 }
 
 .modal-close-btn:hover {
   background: var(--cream);
   color: var(--secondary);
+  transform: scale(1.1);
+}
+
+.modal-close-btn:active {
+  transform: scale(0.95);
 }
 
 .modal-body {
@@ -153,6 +168,26 @@
   display: flex;
   gap: 1rem;
   margin-top: 1.25rem;
+}
+
+.modal-actions .primary-btn,
+.modal-actions .secondary-btn {
+  flex: 1;
+  min-height: 44px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.modal-actions .primary-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(139, 94, 60, 0.3);
+}
+
+.modal-actions .secondary-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(45, 31, 20, 0.1);
 }
 
 /* Profile Modal Specific Styles */
@@ -407,4 +442,253 @@
   .profile-actions {
     flex-direction: column;
   }
+}
+
+/* Form Validation Styles */
+.field-label-required::after {
+  content: ' *';
+  color: var(--error);
+  font-weight: 700;
+}
+
+.modal-form-grid input.input-error,
+.profile-form-field input.input-error {
+  border-color: var(--error);
+  background: rgba(192, 57, 43, 0.05);
+}
+
+.modal-form-grid input.input-error:focus,
+.profile-form-field input.input-error:focus {
+  box-shadow: 0 0 0 3px rgba(192, 57, 43, 0.1);
+}
+
+.field-error {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  margin-top: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--error);
+}
+
+.field-success {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  margin-top: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--success);
+}
+
+.field-success svg {
+  flex-shrink: 0;
+}
+
+/* Profile Read-Only Field Value */
+.profile-field-value {
+  padding: 0.625rem 0.875rem;
+  background: var(--cream);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text-color);
+  font-size: 0.875rem;
+  font-weight: 500;
+  min-height: 38px;
+  display: flex;
+  align-items: center;
+}
+
+/* Secondary Button */
+.secondary-btn {
+  padding: 0.625rem 1.25rem;
+  background: transparent;
+  color: var(--secondary);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.secondary-btn:hover {
+  background: var(--cream);
+  border-color: var(--accent);
+}
+
+.profile-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.profile-actions-group {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.profile-actions .primary-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+@media (max-width: 640px) {
+  .profile-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .profile-actions-group {
+    width: 100%;
+  }
+
+  .profile-actions-group button {
+    flex: 1;
+  }
+
+  .profile-actions button:not(.profile-actions-group button) {
+    width: 100%;
+  }
+}
+
+
+/* Confirm Discard Modal - Higher z-index than main modal */
+.confirm-discard-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(45, 31, 20, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  padding: 1rem;
+  animation: fadeIn 0.2s ease;
+}
+
+.confirm-discard-content {
+  background: #ffffff;
+  border-radius: 20px;
+  box-shadow: 0 24px 48px rgba(45, 31, 20, 0.3);
+  width: min(440px, 100%);
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.confirm-discard-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: rgba(220, 38, 38, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.25rem;
+}
+
+.confirm-discard-icon svg {
+  color: var(--error);
+}
+
+.confirm-discard-content h3 {
+  font-size: 1.375rem;
+  font-weight: 700;
+  color: var(--secondary);
+  margin: 0 0 0.75rem 0;
+}
+
+.confirm-discard-content p {
+  font-size: 0.9375rem;
+  color: var(--muted);
+  line-height: 1.6;
+  margin: 0 0 1.75rem 0;
+}
+
+.confirm-discard-actions {
+  display: flex;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.keep-editing-btn,
+.discard-btn {
+  flex: 1;
+  padding: 0.75rem 1.5rem;
+  border-radius: 12px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+  min-height: 48px;
+}
+
+.keep-editing-btn {
+  background: var(--accent);
+  color: #ffffff;
+}
+
+.keep-editing-btn:hover {
+  background: var(--accent-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(139, 94, 60, 0.3);
+}
+
+.keep-editing-btn:active {
+  transform: translateY(0);
+}
+
+.discard-btn {
+  background: transparent;
+  color: var(--error);
+  border: 1px solid var(--error);
+}
+
+.discard-btn:hover {
+  background: var(--error);
+  color: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+}
+
+.discard-btn:active {
+  transform: translateY(0);
+}
+
+@media (max-width: 640px) {
+  .confirm-discard-content {
+    padding: 1.5rem;
+  }
+
+  .confirm-discard-actions {
+    flex-direction: column-reverse;
+  }
+
+  .keep-editing-btn,
+  .discard-btn {
+    width: 100%;
+  }
+}
+
+
+/* Role Combobox inside modal needs higher z-index */
+.modal-body .role-combobox .role-combobox-dropdown {
+  z-index: 9999;
+}
+
+/* Modal role combobox should be full width */
+.modal-role-combobox {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 100% !important;
 }
