@@ -24,7 +24,6 @@ export default function EmployeeDetails({
             setAvatarBlobUrl(url)
           })
           .catch(err => {
-            console.error('Failed to load avatar:', err)
           })
       }
     }

@@ -27,7 +27,8 @@ import {
   updateEmployee, 
   uploadAvatar,
   fetchProofImage,
-  resolveProofUrl 
+  resolveProofUrl,
+  fetchRoles,
 } from './services/api'
 import { useAttendanceData } from './hooks/useAttendanceData'
 
@@ -84,6 +85,9 @@ function App() {
     email: '', firstName: '', lastName: '', position: '', contactNumber: '', address: ''
   })
 
+  // Roles for position dropdown
+  const [roles, setRoles] = useState([])
+
   // Navigation and filter states
   const [activeTab, setActiveTab] = useState('overview')
   const [selectedDate, setSelectedDate] = useState(MANILA_DATE_KEY_FORMATTER.format(new Date()))
@@ -100,6 +104,13 @@ function App() {
   // Data from custom hook
   const { employees, setEmployees, attendanceLogs, setAttendanceLogs, isLoadingDashboard } = 
     useAttendanceData(isLoggedIn)
+
+  // Fetch roles when logged in
+  useEffect(() => {
+    if (!isLoggedIn) return
+    const token = getCookie('dtr_admin_token')
+    fetchRoles(token).then(setRoles).catch(() => setRoles([]))
+  }, [isLoggedIn])
 
   // Computed data
   const logsWithEmployee = useMemo(
@@ -556,6 +567,7 @@ function App() {
           handleRegisterEmployee={handleRegisterEmployee}
           onCancel={handleCloseRegisterModal}
           onFormChangeDetected={setRegisterFormHasChanges}
+          roles={roles}
         />
       </Modal>
 
@@ -574,6 +586,7 @@ function App() {
           handleAvatarChange={handleAvatarChange}
           isSavingCredentials={isSavingCredentials}
           handleSaveCredentials={handleSaveCredentials}
+          roles={roles}
         />
       </Modal>
 

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { resolveProofUrl, fetchAuthenticatedImage } from '../services/api'
 import { getCookie } from '../utils/cookies'
+import RoleCombobox from './RoleCombobox'
 
 export default function ProfileModal({
   employee,
@@ -25,7 +26,6 @@ export default function ProfileModal({
             setAvatarBlobUrl(url)
           })
           .catch(err => {
-            console.error('Failed to load avatar:', err)
           })
       }
     }
@@ -160,17 +160,16 @@ export default function ProfileModal({
           <div className="profile-form-field">
             <label className="profile-field-label">Position</label>
             {isEditMode ? (
-              <input
-                type="text"
+              <RoleCombobox
                 value={editingCredentialsForm.position}
-                onChange={(e) =>
+                onChange={(selectedRole) =>
                   setEditingCredentialsForm((prev) => ({
                     ...prev,
-                    position: e.target.value,
+                    position: selectedRole,
                   }))
                 }
-                placeholder="e.g., Sales Associate"
-                required
+                placeholder="Select a position..."
+                includeAllOption={false}
               />
             ) : (
               <div className="profile-field-value">{editingCredentialsForm.position}</div>

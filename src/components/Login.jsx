@@ -32,9 +32,10 @@ export default function Login({
         <div className="login-card">
           <div className="login-content-grid">
 
-            {/* Left column */}
+            {/* Left column — logo */}
             <div className="login-logo-column">
               <img src={orlandoLogo} alt="Orlando Prestige" className="login-logo" />
+              <span className="login-brand-name">Orlando Prestige</span>
             </div>
 
             {/* Right column */}

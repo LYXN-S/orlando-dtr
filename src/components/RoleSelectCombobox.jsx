@@ -52,7 +52,6 @@ export default function RoleSelectCombobox({
 
         setAvailableRoles(roleOptions)
       } catch (error) {
-        console.error('Error fetching roles:', error)
         setRoleFetchError(error.message)
       } finally {
         setIsLoadingRoles(false)

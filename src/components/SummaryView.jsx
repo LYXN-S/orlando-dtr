@@ -192,7 +192,6 @@ export default function SummaryView({
       window.URL.revokeObjectURL(blobUrl)
       document.body.removeChild(a)
     } catch (error) {
-      console.error('Error exporting PDF:', error)
       alert('Failed to export PDF. Please try again.')
     } finally {
       setIsExporting(false)

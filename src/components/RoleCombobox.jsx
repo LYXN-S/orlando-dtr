@@ -20,12 +20,12 @@ const fetchRolesWithCache = async () => {
   // Create new fetch promise
   rolesCachePromise = (async () => {
     try {
-      const token = getCookie('authToken')
+      const token = getCookie('dtr_admin_token')
       if (!token) {
         throw new Error('Authentication token not found')
       }
 
-      const response = await fetch(`${AUTH_API_BASE_URL}/admin/roles`, {
+      const response = await fetch(`${AUTH_API_BASE_URL}/roles`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -48,7 +48,7 @@ const fetchRolesWithCache = async () => {
       rolesCache = roleOptions
       return roleOptions
     } catch (error) {
-      console.error('Error fetching roles:', error)
+
       throw error
     } finally {
       rolesCachePromise = null

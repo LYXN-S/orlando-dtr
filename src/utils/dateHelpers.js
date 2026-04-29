@@ -4,8 +4,12 @@ export const MANILA_TIME_ZONE = 'Asia/Manila'
 
 export const parseBackendDate = (value) => {
   if (!value) return null
-  const hasZone = /([zZ]|[+-]\d{2}:\d{2})$/.test(value)
-  const parsed = new Date(hasZone ? value : `${value}Z`)
+  // The backend (Hibernate) returns timestamps in Asia/Manila time without a timezone suffix.
+  // We must NOT append 'Z' (UTC) — that would add 8 hours when displayed in Manila time.
+  // Instead, append the Manila offset (+08:00) so the Date object is timezone-aware.
+  const hasExplicitZone = /([zZ]|[+-]\d{2}:\d{2})$/.test(value)
+  const normalized = hasExplicitZone ? value : `${value}+08:00`
+  const parsed = new Date(normalized)
   return Number.isNaN(parsed.getTime()) ? null : parsed
 }
 

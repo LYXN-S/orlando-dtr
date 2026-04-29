@@ -686,6 +686,14 @@
   z-index: 9999;
 }
 
+/* Open upward inside modals so the list isn't clipped by the modal bottom */
+.modal-body .role-combobox .role-combobox-dropdown,
+.profile-info-form .role-combobox .role-combobox-dropdown {
+  top: auto;
+  bottom: calc(100% + 0.5rem);
+  z-index: 9999;
+}
+
 /* Modal role combobox should be full width */
 .modal-role-combobox {
   width: 100% !important;

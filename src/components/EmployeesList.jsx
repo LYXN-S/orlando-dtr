@@ -18,7 +18,6 @@ function AvatarImage({ employee, className, size = 'medium' }) {
             setAvatarBlobUrl(url)
           })
           .catch(err => {
-            console.error('Failed to load avatar:', err)
           })
       }
     }

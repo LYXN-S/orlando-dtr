@@ -1,3 +1,8 @@
+/* Brand name — only shown on mobile alongside compact logo */
+.login-brand-name {
+  display: none;
+}
+
 /* Login Page */
 .login-page-wrapper {
   min-height: 100vh;
@@ -191,7 +196,7 @@
   .login-page-wrapper {
     padding: 0;
     align-items: stretch;
-    background: #BF8D56;
+    background: #ffffff;
   }
 
   .login-bg-diagonal {
@@ -202,24 +207,51 @@
     width: 100%;
     min-height: 100vh;
     border-radius: 0;
-    background: #BF8D56;
+    background: #ffffff;
     box-shadow: none;
+    display: flex;
+    flex-direction: column;
   }
 
   .login-content-grid {
     grid-template-columns: 1fr;
     min-height: 100vh;
+    display: flex;
+    flex-direction: column;
   }
 
-  /* Hide logo column on mobile */
+  /* Mobile logo strip at top */
   .login-logo-column {
-    display: none;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 20px 28px 0;
+    gap: 12px;
+    background: #ffffff;
+  }
+
+  .login-logo {
+    height: 48px;
+    width: 48px;
+    object-fit: contain;
+    border-radius: 10px;
+  }
+
+  /* Brand name next to logo */
+  .login-brand-name {
+    display: block;
+    font-size: 15px;
+    font-weight: 700;
+    color: #2c1a0e;
+    letter-spacing: -0.01em;
   }
 
   .login-form-column {
-    padding: 48px 28px 40px;
+    flex: 1;
+    padding: 32px 28px 48px;
     justify-content: center;
-    min-height: 100vh;
+    background: #ffffff;
   }
 
   .login-form-container {
@@ -227,7 +259,88 @@
   }
 
   .login-heading {
-    font-size: 28px;
+    font-size: 26px;
+    color: #2c1a0e;
+    margin-bottom: 4px;
+  }
+
+  /* Subtitle under heading on mobile */
+  .login-heading::after {
+    content: '';
+    display: block;
+    width: 36px;
+    height: 3px;
+    background: #BF8D56;
+    border-radius: 2px;
+    margin-top: 10px;
+    margin-bottom: 24px;
+  }
+
+  .login-label {
+    color: #6b5040;
+  }
+
+  .login-input {
+    background: #faf7f4;
+    border: 1.5px solid #e8ddd4;
+    color: #2c1a0e;
+    height: 50px;
+    border-radius: 12px;
+    font-size: 15px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  .login-input:focus {
+    border-color: #BF8D56;
+    box-shadow: 0 0 0 3px rgba(191, 141, 86, 0.12);
+    background: #ffffff;
+    outline: none;
+  }
+
+  .login-error {
+    background: rgba(192, 57, 43, 0.08);
+    border: 1px solid rgba(192, 57, 43, 0.2);
+    color: #c0392b;
+    border-radius: 10px;
+  }
+
+  .login-submit-btn {
+    height: 50px;
+    border-radius: 12px;
+    background: #BF8D56;
+    font-size: 15px;
+    letter-spacing: 0.04em;
+    box-shadow: 0 4px 14px rgba(191, 141, 86, 0.35);
+    transition: background 0.2s, box-shadow 0.2s, transform 0.1s;
+  }
+
+  .login-submit-btn:hover:not(:disabled) {
+    background: #a87a47;
+    box-shadow: 0 6px 18px rgba(191, 141, 86, 0.4);
+    transform: translateY(-1px);
+  }
+
+  .login-submit-btn:active:not(:disabled) {
+    transform: translateY(0);
+  }
+
+  .login-download-btn {
+    height: 50px;
+    border-radius: 12px;
+    background: transparent;
+    border: 1.5px solid #e8ddd4;
+    color: #8b6a4f;
+    font-size: 14px;
+    transition: background 0.2s, border-color 0.2s;
+  }
+
+  .login-download-btn:hover {
+    background: #faf7f4;
+    border-color: #BF8D56;
+  }
+
+  .login-password-toggle {
+    color: #BF8D56;
   }
 }
 
