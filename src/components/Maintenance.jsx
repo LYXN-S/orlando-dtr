@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { getCookie } from '../utils/cookies'
+import { verifyPassword } from '../services/api'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://206.189.87.46.nip.io'
 
@@ -11,11 +12,12 @@ function Maintenance({ employees = [] }) {
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 5
   
-  // Modal states
-  const [showWarningModal, setShowWarningModal] = useState(false)
-  const [showFinalModal, setShowFinalModal] = useState(false)
-  const [showTypeModal, setShowTypeModal] = useState(false)
-  const [deleteInput, setDeleteInput] = useState('')
+  // Password verification modal states
+  const [showPasswordModal, setShowPasswordModal] = useState(false)
+  const [password, setPassword] = useState('')
+  const [isVerifying, setIsVerifying] = useState(false)
+  const [passwordError, setPasswordError] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
 
   const filteredEmployees = employees.filter(emp => {
     if (!searchQuery.trim()) return true
@@ -35,7 +37,10 @@ function Maintenance({ employees = [] }) {
       window.alert('Please select at least one employee first.')
       return
     }
-    setShowWarningModal(true)
+    // Directly open password modal
+    setShowPasswordModal(true)
+    setPassword('')
+    setPasswordError('')
   }
 
   const handleSearchChange = (e) => {
@@ -75,25 +80,40 @@ function Maintenance({ employees = [] }) {
 
   const selectedEmployees = employees.filter(emp => selectedEmployeeIds.includes(emp.id))
 
-  const handleWarningConfirm = () => {
-    setShowWarningModal(false)
-    setShowFinalModal(true)
-  }
-
-  const handleFinalConfirm = () => {
-    setShowFinalModal(false)
-    setShowTypeModal(true)
-    setDeleteInput('')
-  }
-
-  const handleTypeConfirm = async () => {
-    if (deleteInput !== 'DELETE') {
-      window.alert('You must type "DELETE" exactly to confirm.')
+  const handlePasswordSubmit = async (e) => {
+    e.preventDefault()
+    
+    if (!password.trim()) {
+      setPasswordError('Please enter your password.')
       return
     }
 
-    setShowTypeModal(false)
-    await performDelete()
+    const token = getCookie('dtr_admin_token')
+    if (!token) {
+      setPasswordError('Admin session expired. Please login again.')
+      return
+    }
+
+    setIsVerifying(true)
+    setPasswordError('')
+
+    try {
+      await verifyPassword(token, password)
+      // Password verified, proceed with deletion
+      setShowPasswordModal(false)
+      setPassword('')
+      await performDelete()
+    } catch (err) {
+      setPasswordError(err.message || 'Incorrect password. Please try again.')
+    } finally {
+      setIsVerifying(false)
+    }
+  }
+
+  const handlePasswordCancel = () => {
+    setShowPasswordModal(false)
+    setPassword('')
+    setPasswordError('')
   }
 
   const performDelete = async () => {
@@ -109,6 +129,8 @@ function Maintenance({ employees = [] }) {
     try {
       let totalDeleted = 0
       const errors = []
+
+      const employeesToDelete = employees.filter(emp => selectedEmployeeIds.includes(emp.id))
 
       // Delete records for each selected employee
       for (const employeeId of selectedEmployeeIds) {
@@ -141,9 +163,9 @@ function Maintenance({ employees = [] }) {
       if (errors.length === 0) {
         setDeleteResult({
           success: true,
-          message: `Successfully deleted attendance records for ${selectedEmployees.length} employee${selectedEmployees.length > 1 ? 's' : ''}`,
+          message: `Successfully deleted attendance records for ${employeesToDelete.length} employee${employeesToDelete.length > 1 ? 's' : ''}`,
           deletedCount: totalDeleted,
-          employeeNames: selectedEmployees.map(emp => `${emp.firstName} ${emp.lastName}`).join(', ')
+          employeeNames: employeesToDelete.map(emp => `${emp.firstName} ${emp.lastName}`).join(', ')
         })
         setSelectedEmployeeIds([])
       } else if (errors.length < selectedEmployeeIds.length) {
@@ -151,7 +173,7 @@ function Maintenance({ employees = [] }) {
           success: true,
           message: `Partially completed. ${totalDeleted} records deleted, but ${errors.length} employee(s) had errors.`,
           deletedCount: totalDeleted,
-          employeeNames: selectedEmployees.map(emp => `${emp.firstName} ${emp.lastName}`).join(', '),
+          employeeNames: employeesToDelete.map(emp => `${emp.firstName} ${emp.lastName}`).join(', '),
           errors: errors
         })
         setSelectedEmployeeIds([])
@@ -168,50 +190,8 @@ function Maintenance({ employees = [] }) {
     }
   }
 
-  const closeAllModals = () => {
-    setShowWarningModal(false)
-    setShowFinalModal(false)
-    setShowTypeModal(false)
-    setDeleteInput('')
-  }
-
   return (
-    <div className="maintenance-container">
-      <div className="maintenance-header">
-        <div className="maintenance-header-content">
-          <div className="maintenance-title-section">
-            <h2>🔧 Maintenance</h2>
-            <p className="maintenance-subtitle">Manage attendance records and system data</p>
-          </div>
-          <div className="maintenance-info-compact">
-            <div className="info-badge">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="12" cy="12" r="10"></circle>
-                <line x1="12" y1="16" x2="12" y2="12"></line>
-                <line x1="12" y1="8" x2="12.01" y2="8"></line>
-              </svg>
-              <span>Records cannot be recovered</span>
-            </div>
-            <div className="info-badge">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                <circle cx="8.5" cy="7" r="4"></circle>
-                <line x1="20" y1="8" x2="20" y2="14"></line>
-                <line x1="23" y1="11" x2="17" y2="11"></line>
-              </svg>
-              <span>Profiles remain intact</span>
-            </div>
-            <div className="info-badge">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                <polyline points="22 4 12 14.01 9 11.01"></polyline>
-              </svg>
-              <span>Multiple selection enabled</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
+    <div className="maintenance-container" style={{ maxWidth: '1280px', margin: '0 auto' }}>
       <div className="maintenance-content">
         <div className="maintenance-card danger-zone">
             <div className="card-header">
@@ -220,12 +200,40 @@ function Maintenance({ employees = [] }) {
             </div>
 
             <div className="maintenance-section">
-              <div className="section-header">
-                <h4>Delete All Attendance Records for Employee</h4>
-                <p className="section-description">
-                  Permanently delete all time-in and time-out records for a specific employee. 
-                  This action cannot be undone.
-                </p>
+              <div className="section-header-with-info">
+                <div className="section-header-left">
+                  <h4>Delete All Attendance Records for Employee</h4>
+                  <p className="section-description">
+                    Permanently delete all time-in and time-out records for a specific employee. 
+                    This action cannot be undone.
+                  </p>
+                </div>
+                <div className="maintenance-info-compact">
+                  <div className="info-badge">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <line x1="12" y1="16" x2="12" y2="12"></line>
+                      <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                    </svg>
+                    <span>Records cannot be recovered</span>
+                  </div>
+                  <div className="info-badge">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                      <circle cx="8.5" cy="7" r="4"></circle>
+                      <line x1="20" y1="8" x2="20" y2="14"></line>
+                      <line x1="23" y1="11" x2="17" y2="11"></line>
+                    </svg>
+                    <span>Profiles remain intact</span>
+                  </div>
+                  <div className="info-badge">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                      <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                    </svg>
+                    <span>Multiple selection enabled</span>
+                  </div>
+                </div>
               </div>
 
               <div className="form-group">
@@ -246,77 +254,79 @@ function Maintenance({ employees = [] }) {
               </div>
 
               <div className="employee-table-container">
-                <table className="employee-table">
-                  <thead>
-                    <tr>
-                      <th className="text-center">
-                        <input
-                          type="checkbox"
-                          checked={paginatedEmployees.length > 0 && paginatedEmployees.every(emp => selectedEmployeeIds.includes(emp.id))}
-                          onChange={handleSelectAll}
-                          title="Select all on this page"
-                        />
-                      </th>
-                      <th>Employee</th>
-                      <th>Position</th>
-                      <th>Email</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {paginatedEmployees.length > 0 ? (
-                      paginatedEmployees.map(emp => (
-                        <tr
-                          key={emp.id}
-                          className={selectedEmployeeIds.includes(emp.id) ? 'selected' : ''}
-                          onClick={() => handleEmployeeSelect(emp.id)}
-                        >
-                          <td className="text-center" onClick={(e) => e.stopPropagation()}>
-                            <div className="checkbox-cell">
-                              <input
-                                type="checkbox"
-                                checked={selectedEmployeeIds.includes(emp.id)}
-                                onChange={() => handleEmployeeSelect(emp.id)}
-                              />
-                            </div>
-                          </td>
-                          <td>
-                            <div className="employee-cell">
-                              <div className="employee-avatar">
-                                {emp.avatarUrl ? (
-                                  <img 
-                                    src={`${API_BASE_URL}${emp.avatarUrl}`} 
-                                    alt={`${emp.firstName} ${emp.lastName}`}
-                                    onError={(e) => {
-                                      e.target.style.display = 'none'
-                                      e.target.nextSibling.style.display = 'flex'
-                                    }}
-                                  />
-                                ) : null}
-                                <div className="employee-avatar-placeholder" style={{ display: emp.avatarUrl ? 'none' : 'flex' }}>
-                                  {emp.firstName[0]}{emp.lastName[0]}
-                                </div>
-                              </div>
-                              <span className="employee-name">{emp.firstName} {emp.lastName}</span>
-                            </div>
-                          </td>
-                          <td>{emp.position}</td>
-                          <td className="text-muted">{emp.email}</td>
-                        </tr>
-                      ))
-                    ) : (
+                <div className="employee-table-wrapper">
+                  <table className="employee-table">
+                    <thead>
                       <tr>
-                        <td colSpan="4" className="empty-state">
-                          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <circle cx="11" cy="11" r="8"></circle>
-                            <path d="m21 21-4.35-4.35"></path>
-                          </svg>
-                          <p>No employees found</p>
-                          {searchQuery && <span>Try adjusting your search</span>}
-                        </td>
+                        <th className="text-center">
+                          <input
+                            type="checkbox"
+                            checked={paginatedEmployees.length > 0 && paginatedEmployees.every(emp => selectedEmployeeIds.includes(emp.id))}
+                            onChange={handleSelectAll}
+                            title="Select all on this page"
+                          />
+                        </th>
+                        <th>Employee</th>
+                        <th>Position</th>
+                        <th>Email</th>
                       </tr>
-                    )}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {paginatedEmployees.length > 0 ? (
+                        paginatedEmployees.map(emp => (
+                          <tr
+                            key={emp.id}
+                            className={selectedEmployeeIds.includes(emp.id) ? 'selected' : ''}
+                            onClick={() => handleEmployeeSelect(emp.id)}
+                          >
+                            <td className="text-center" onClick={(e) => e.stopPropagation()}>
+                              <div className="checkbox-cell">
+                                <input
+                                  type="checkbox"
+                                  checked={selectedEmployeeIds.includes(emp.id)}
+                                  onChange={() => handleEmployeeSelect(emp.id)}
+                                />
+                              </div>
+                            </td>
+                            <td>
+                              <div className="employee-cell">
+                                <div className="employee-avatar">
+                                  {emp.avatarUrl ? (
+                                    <img 
+                                      src={`${API_BASE_URL}${emp.avatarUrl}`} 
+                                      alt={`${emp.firstName} ${emp.lastName}`}
+                                      onError={(e) => {
+                                        e.target.style.display = 'none'
+                                        e.target.nextSibling.style.display = 'flex'
+                                      }}
+                                    />
+                                  ) : null}
+                                  <div className="employee-avatar-placeholder" style={{ display: emp.avatarUrl ? 'none' : 'flex' }}>
+                                    {emp.firstName[0]}{emp.lastName[0]}
+                                  </div>
+                                </div>
+                                <span className="employee-name">{emp.firstName} {emp.lastName}</span>
+                              </div>
+                            </td>
+                            <td>{emp.position}</td>
+                            <td className="text-muted">{emp.email}</td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan="4" className="empty-state">
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <circle cx="11" cy="11" r="8"></circle>
+                              <path d="m21 21-4.35-4.35"></path>
+                            </svg>
+                            <p>No employees found</p>
+                            {searchQuery && <span>Try adjusting your search</span>}
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
 
                 {totalPages > 1 && paginatedEmployees.length > 0 && (
                   <div className="table-pagination">
@@ -409,7 +419,7 @@ function Maintenance({ employees = [] }) {
                       <line x1="10" y1="11" x2="10" y2="17"></line>
                       <line x1="14" y1="11" x2="14" y2="17"></line>
                     </svg>
-                    Delete All Records
+                    Delete {selectedEmployees.length} Selected Record{selectedEmployees.length !== 1 ? 's' : ''}
                   </>
                 )}
               </button>
@@ -437,130 +447,103 @@ function Maintenance({ employees = [] }) {
           </div>
         </div>
 
-      {/* Warning Modal */}
-      {showWarningModal && selectedEmployees.length > 0 && (
-        <div className="confirmation-modal-overlay" onClick={closeAllModals}>
-          <div className="confirmation-modal warning" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-icon warning-icon">
-              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
-                <line x1="12" y1="9" x2="12" y2="13"></line>
-                <line x1="12" y1="17" x2="12.01" y2="17"></line>
-              </svg>
-            </div>
-            <h3 className="modal-title">⚠️ WARNING</h3>
-            <p className="modal-message">
-              This will permanently delete <strong>ALL</strong> attendance records for {selectedEmployees.length} employee{selectedEmployees.length > 1 ? 's' : ''}:
-            </p>
-            <div className="modal-employee-info">
-              {selectedEmployees.map(emp => (
-                <div key={emp.id} className="modal-employee-name">{emp.firstName} {emp.lastName} - {emp.position}</div>
-              ))}
-            </div>
-            <p className="modal-warning-text">
-              This action <strong>CANNOT</strong> be undone!
-            </p>
-            <p className="modal-question">Are you absolutely sure you want to proceed?</p>
-            <div className="modal-actions">
-              <button className="modal-btn cancel" onClick={closeAllModals}>
-                Cancel
-              </button>
-              <button className="modal-btn danger" onClick={handleWarningConfirm}>
-                Yes, Continue
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Final Confirmation Modal */}
-      {showFinalModal && selectedEmployees.length > 0 && (
-        <div className="confirmation-modal-overlay" onClick={closeAllModals}>
-          <div className="confirmation-modal danger" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-icon danger-icon">
-              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="12" cy="12" r="10"></circle>
-                <line x1="15" y1="9" x2="9" y2="15"></line>
-                <line x1="9" y1="9" x2="15" y2="15"></line>
-              </svg>
-            </div>
-            <h3 className="modal-title">FINAL CONFIRMATION</h3>
-            <p className="modal-message">
-              You are about to permanently delete all attendance records for {selectedEmployees.length} employee{selectedEmployees.length > 1 ? 's' : ''}:
-            </p>
-            <div className="modal-employee-info highlight">
-              {selectedEmployees.map(emp => (
-                <div key={emp.id} className="modal-employee-name">{emp.firstName} {emp.lastName}</div>
-              ))}
-            </div>
-            <p className="modal-warning-text">
-              This action is <strong>IRREVERSIBLE</strong> and will delete all time-in and time-out records.
-            </p>
-            <p className="modal-question">
-              Are you ready to proceed to the final confirmation step?
-            </p>
-            <div className="modal-actions">
-              <button className="modal-btn cancel" onClick={closeAllModals}>
-                Cancel
-              </button>
-              <button className="modal-btn danger" onClick={handleFinalConfirm}>
-                Proceed to Final Step
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Type DELETE Modal */}
-      {showTypeModal && selectedEmployees.length > 0 && (
-        <div className="confirmation-modal-overlay" onClick={closeAllModals}>
+      {/* Password Verification Modal */}
+      {showPasswordModal && selectedEmployees.length > 0 && (
+        <div className="confirmation-modal-overlay" onClick={handlePasswordCancel}>
           <div className="confirmation-modal critical" onClick={(e) => e.stopPropagation()}>
             <div className="modal-icon critical-icon">
               <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <polyline points="3 6 5 6 21 6"></polyline>
-                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                <line x1="10" y1="11" x2="10" y2="17"></line>
-                <line x1="14" y1="11" x2="14" y2="17"></line>
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
               </svg>
             </div>
-            <h3 className="modal-title">Type DELETE to Confirm</h3>
+            <h3 className="modal-title">Admin Password Required</h3>
             <p className="modal-message">
-              This is your last chance to cancel. You are deleting records for {selectedEmployees.length} employee{selectedEmployees.length > 1 ? 's' : ''}.
+              You are about to permanently delete all attendance records for {selectedEmployees.length} employee{selectedEmployees.length > 1 ? 's' : ''}:
             </p>
-            <div className="modal-employee-info highlight">
+            <div className="modal-employee-list-container">
               {selectedEmployees.map(emp => (
-                <div key={emp.id} className="modal-employee-name">{emp.firstName} {emp.lastName} - {emp.position}</div>
+                <div key={emp.id} className="modal-employee-list-item">{emp.firstName} {emp.lastName} - {emp.position}</div>
               ))}
             </div>
-            <div className="modal-input-group">
-              <label htmlFor="delete-confirm-input">Type <strong>DELETE</strong> to confirm:</label>
-              <input
-                id="delete-confirm-input"
-                type="text"
-                className="modal-input"
-                placeholder="Type DELETE here"
-                value={deleteInput}
-                onChange={(e) => setDeleteInput(e.target.value)}
-                autoFocus
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && deleteInput === 'DELETE') {
-                    handleTypeConfirm()
-                  }
-                }}
-              />
-            </div>
-            <div className="modal-actions">
-              <button className="modal-btn cancel" onClick={closeAllModals}>
-                Cancel
-              </button>
-              <button 
-                className="modal-btn critical" 
-                onClick={handleTypeConfirm}
-                disabled={deleteInput !== 'DELETE'}
-              >
-                Delete All Records
-              </button>
-            </div>
+            <p className="modal-message" style={{ marginTop: '1rem' }}>
+              Please enter your admin password to authorize this deletion.
+            </p>
+            
+            <form onSubmit={handlePasswordSubmit} className="modal-form">
+              <div className="modal-input-group">
+                <label htmlFor="admin-password-input">Admin Password:</label>
+                <div className="password-input-wrapper">
+                  <input
+                    id="admin-password-input"
+                    type={showPassword ? 'text' : 'password'}
+                    className={`modal-input ${passwordError ? 'error' : ''}`}
+                    placeholder="Enter your password"
+                    value={password}
+                    onChange={(e) => {
+                      setPassword(e.target.value)
+                      setPasswordError('')
+                    }}
+                    disabled={isVerifying}
+                    autoFocus
+                  />
+                  <button
+                    type="button"
+                    className="password-toggle-btn"
+                    onClick={() => setShowPassword(!showPassword)}
+                    disabled={isVerifying}
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showPassword ? (
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                        <line x1="1" y1="1" x2="23" y2="23"></line>
+                      </svg>
+                    ) : (
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                      </svg>
+                    )}
+                  </button>
+                </div>
+                {passwordError && (
+                  <div className="modal-error-message">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <line x1="12" y1="8" x2="12" y2="12"></line>
+                      <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                    </svg>
+                    {passwordError}
+                  </div>
+                )}
+              </div>
+
+              <div className="modal-actions">
+                <button 
+                  type="button" 
+                  className="modal-btn cancel" 
+                  onClick={handlePasswordCancel}
+                  disabled={isVerifying}
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit"
+                  className="modal-btn critical" 
+                  disabled={isVerifying || !password.trim()}
+                >
+                  {isVerifying ? (
+                    <>
+                      <span className="spinner-small"></span>
+                      Verifying...
+                    </>
+                  ) : (
+                    'Confirm & Delete'
+                  )}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

@@ -6,7 +6,7 @@ import Dashboard from './components/Dashboard'
 import EmployeesList from './components/EmployeesList'
 import EmployeeDetails from './components/EmployeeDetails'
 import SummaryView from './components/SummaryView'
-import MaintenanceWithSudoMode from './components/MaintenanceWithSudoMode'
+import Maintenance from './components/Maintenance'
 import RegisterEmployeeModal from './components/RegisterEmployeeModal'
 import ProfileModal from './components/ProfileModal'
 import ConfirmDiscardModal from './components/ConfirmDiscardModal'
@@ -476,7 +476,20 @@ function App() {
 
       <section className="main-content">
         <header className="top-header">
-          <h1 className="company-name">Orlando Prestige Inc.</h1>
+          {activeTab === 'maintenance' ? (
+            <>
+              <div>
+                <h1 className="company-name" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1.5rem' }}>
+                  🔧 Maintenance
+                </h1>
+                <p style={{ fontSize: '0.875rem', color: '#666', marginTop: '0.25rem', fontWeight: '500' }}>
+                  Manage attendance records and system data
+                </p>
+              </div>
+            </>
+          ) : (
+            <h1 className="company-name">Orlando Prestige Inc.</h1>
+          )}
           <div className="current-date">
             {currentDateTime.toLocaleDateString('en-US', { 
               weekday: 'short', 
@@ -533,7 +546,7 @@ function App() {
             />
           )
         ) : activeTab === 'maintenance' ? (
-          <MaintenanceWithSudoMode employees={employees} />
+          <Maintenance employees={employees} />
         ) : (
           <SummaryView
             logs={paginatedSummaryLogs}
