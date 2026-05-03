@@ -10,6 +10,7 @@ import Maintenance from './components/Maintenance'
 import RegisterEmployeeModal from './components/RegisterEmployeeModal'
 import ProfileModal from './components/ProfileModal'
 import ConfirmDiscardModal from './components/ConfirmDiscardModal'
+import LogoutConfirmModal from './components/LogoutConfirmModal'
 import Toast from './components/Toast'
 import ZoomableImage from './components/ZoomableImage'
 import { setCookie, getCookie, deleteCookie } from './utils/cookies'
@@ -74,6 +75,7 @@ function App() {
   const [proofPreviewTitle, setProofPreviewTitle] = useState('Proof Preview')
   const [proofPreviewError, setProofPreviewError] = useState('')
   const [isProofFullscreen, setIsProofFullscreen] = useState(false)
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
 
   // Form states
   const [editingCredentialsForm, setEditingCredentialsForm] = useState({
@@ -258,6 +260,10 @@ function App() {
   }
 
   const handleLogout = () => {
+    setShowLogoutConfirm(true)
+  }
+
+  const confirmLogout = () => {
     deleteCookie('dtr_admin_token')
     deleteCookie('dtr_admin_role')
     deleteCookie('dtr_keep_logged_in')
@@ -265,6 +271,7 @@ function App() {
     setLoginForm({ email: '', password: '' })
     setKeepLoggedIn(false)
     setActiveTab('overview')
+    setShowLogoutConfirm(false)
   }
 
   const handleForgotPassword = (event) => {
@@ -639,6 +646,12 @@ function App() {
         type={toast.type}
         isVisible={toast.isVisible}
         onClose={() => setToast({ ...toast, isVisible: false })}
+      />
+
+      <LogoutConfirmModal
+        isOpen={showLogoutConfirm}
+        onCancel={() => setShowLogoutConfirm(false)}
+        onConfirm={confirmLogout}
       />
     </main>
   )
