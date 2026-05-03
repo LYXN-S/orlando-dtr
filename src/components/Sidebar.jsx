@@ -4,6 +4,7 @@ import orlandoLogo from '../assets/orlando_logo.jpg'
 export default function Sidebar({ activeTab, setActiveTab, handleLogout }) {
   const navRef = useRef(null)
   const [indicatorStyle, setIndicatorStyle] = useState({ transform: 'translateY(0px)', height: '0px' })
+  const [isCollapsed, setIsCollapsed] = useState(false)
 
   const menuItems = [
     { id: 'overview', label: 'Dashboard', icon: (
@@ -60,10 +61,38 @@ export default function Sidebar({ activeTab, setActiveTab, handleLogout }) {
     return () => window.removeEventListener('resize', updateIndicator)
   }, [activeTab])
 
+  useEffect(() => {
+    // Update CSS variable for sidebar width
+    document.documentElement.style.setProperty(
+      '--sidebar-width',
+      isCollapsed ? '80px' : '240px'
+    )
+  }, [isCollapsed])
+
   return (
-    <aside className="sidebar">
+    <aside className={`sidebar ${isCollapsed ? 'collapsed' : ''}`}>
       <div className="sidebar-header">
-        <img src={orlandoLogo} alt="Orlando Prestige Inc." className="sidebar-logo" />
+        <div className="sidebar-logo-container">
+          <img src={orlandoLogo} alt="Orlando Prestige Inc." className="sidebar-logo" />
+          <span className="sidebar-brand-text">Orlando Prestige Inc.</span>
+        </div>
+        <button 
+          className="sidebar-collapse-btn" 
+          onClick={() => setIsCollapsed(!isCollapsed)}
+          aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+        >
+          <svg 
+            width="16" 
+            height="16" 
+            viewBox="0 0 24 24" 
+            fill="none" 
+            stroke="currentColor" 
+            strokeWidth="2"
+            className="collapse-icon"
+          >
+            <polyline points="15 18 9 12 15 6" />
+          </svg>
+        </button>
       </div>
 
       <nav className="sidebar-nav" ref={navRef}>
@@ -78,21 +107,22 @@ export default function Sidebar({ activeTab, setActiveTab, handleLogout }) {
             key={item.id}
             className={`sidebar-nav-item ${activeTab === item.id ? 'active' : ''}`}
             onClick={() => setActiveTab(item.id)}
+            title={isCollapsed ? item.label : ''}
           >
             {item.icon}
-            {item.label}
+            <span className="sidebar-nav-label">{item.label}</span>
           </button>
         ))}
       </nav>
 
       <div className="sidebar-footer">
-        <button className="logout-btn" onClick={handleLogout}>
+        <button className="logout-btn" onClick={handleLogout} title={isCollapsed ? 'Logout' : ''}>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
             <polyline points="16 17 21 12 16 7" />
             <line x1="21" y1="12" x2="9" y2="12" />
           </svg>
-          Logout
+          <span className="logout-btn-label">Logout</span>
         </button>
       </div>
     </aside>
