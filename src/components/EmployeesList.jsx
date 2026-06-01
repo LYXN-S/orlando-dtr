@@ -1,6 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
 import { resolveProofUrl, fetchAuthenticatedImage } from '../services/api'
-import { getCookie } from '../utils/cookies'
 import RoleCombobox from './RoleCombobox'
 import Pagination from './Pagination'
 
@@ -9,17 +8,13 @@ function AvatarImage({ employee, className, size = 'medium' }) {
 
   useEffect(() => {
     if (employee?.avatarUrl) {
-      const token = getCookie('dtr_admin_token')
-      if (token) {
-        const fullUrl = resolveProofUrl(employee.avatarUrl)
-        fetchAuthenticatedImage(fullUrl, token)
-          .then(blob => {
-            const url = URL.createObjectURL(blob)
-            setAvatarBlobUrl(url)
-          })
-          .catch(err => {
-          })
-      }
+      const fullUrl = resolveProofUrl(employee.avatarUrl)
+      fetchAuthenticatedImage(fullUrl)
+        .then((blob) => {
+          const url = URL.createObjectURL(blob)
+          setAvatarBlobUrl(url)
+        })
+        .catch(() => {})
     }
 
     return () => {

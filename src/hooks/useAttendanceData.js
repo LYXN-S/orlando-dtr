@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import { fetchEmployees, fetchAttendanceLogs } from '../services/api'
-import { getCookie } from '../utils/cookies'
 
 export function useAttendanceData(isLoggedIn) {
   const [employees, setEmployees] = useState([])
@@ -13,20 +12,14 @@ export function useAttendanceData(isLoggedIn) {
       return
     }
 
-    const token = getCookie('dtr_admin_token')
-    if (!token) {
-      setIsLoadingDashboard(false)
-      return
-    }
-
     let cancelled = false
     setIsLoadingDashboard(true)
 
     const loadData = async () => {
       try {
         const [employeesData, logsData] = await Promise.all([
-          fetchEmployees(token).catch(() => []),
-          fetchAttendanceLogs(token).catch(() => []),
+          fetchEmployees().catch(() => []),
+          fetchAttendanceLogs().catch(() => []),
         ])
 
         if (!cancelled) {

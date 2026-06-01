@@ -1,10 +1,10 @@
-// Cookie helper functions for secure token storage
+// Non-auth preference cookies only. JWTs are HttpOnly cookies set by the backend.
 
 export const setCookie = (name, value, days = 7) => {
   const expires = new Date()
   expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000)
   const secure = window.location.protocol === 'https:' ? '; Secure' : ''
-  document.cookie = `${name}=${value}; expires=${expires.toUTCString()}; path=/; SameSite=Strict${secure}`
+  document.cookie = `${name}=${value}; expires=${expires.toUTCString()}; path=/; SameSite=Lax${secure}`
 }
 
 export const getCookie = (name) => {
@@ -19,5 +19,5 @@ export const getCookie = (name) => {
 }
 
 export const deleteCookie = (name) => {
-  document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; SameSite=Strict`
+  document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; SameSite=Lax`
 }

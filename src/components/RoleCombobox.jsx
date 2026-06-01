@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { AUTH_API_BASE_URL } from '../utils/constants'
-import { getCookie } from '../utils/cookies'
+import { fetchRoles as fetchRolesFromApi } from '../services/api'
 
 // Shared cache for roles to avoid redundant API calls
 let rolesCache = null
@@ -20,22 +19,7 @@ const fetchRolesWithCache = async () => {
   // Create new fetch promise
   rolesCachePromise = (async () => {
     try {
-      const token = getCookie('dtr_admin_token')
-      if (!token) {
-        throw new Error('Authentication token not found')
-      }
-
-      const response = await fetch(`${AUTH_API_BASE_URL}/roles`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch roles: ${response.status}`)
-      }
-
-      const data = await response.json()
+      const data = await fetchRolesFromApi()
       
       // Map the roles data to combobox options format
       const roleOptions = Array.isArray(data) 

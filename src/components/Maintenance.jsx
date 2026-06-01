@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { getCookie } from '../utils/cookies'
-import { verifyPassword } from '../services/api'
+import { verifyPassword, deleteEmployeeAttendance } from '../services/api'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://206.189.87.46.nip.io'
 
@@ -117,12 +117,6 @@ function Maintenance({ employees = [] }) {
   }
 
   const performDelete = async () => {
-    const token = getCookie('dtr_admin_token')
-    if (!token) {
-      window.alert('Admin session expired. Please login again.')
-      return
-    }
-
     setIsDeleting(true)
     setDeleteResult(null)
 
@@ -132,27 +126,10 @@ function Maintenance({ employees = [] }) {
 
       const employeesToDelete = employees.filter(emp => selectedEmployeeIds.includes(emp.id))
 
-      // Delete records for each selected employee
       for (const employeeId of selectedEmployeeIds) {
         try {
-          const response = await fetch(
-            `${API_BASE_URL}/admin/dtr/attendance/employee/${employeeId}`,
-            {
-              method: 'DELETE',
-              headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-              }
-            }
-          )
-
-          if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}))
-            throw new Error(errorData.message || `Failed to delete records: ${response.status}`)
-          }
-
-          const result = await response.json()
-          totalDeleted += result.deletedCount || 0
+          const result = await deleteEmployeeAttendance(employeeId)
+          totalDeleted += result?.deletedCount || 0
         } catch (error) {
           const emp = employees.find(e => e.id === employeeId)
           const empName = emp ? `${emp.firstName} ${emp.lastName}` : `Employee ${employeeId}`

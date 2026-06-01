@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { getCookie } from '../utils/cookies'
 import { verifyPassword } from '../services/api'
 import Maintenance from './Maintenance'
 import '../styles/SudoMode.css'
@@ -19,17 +18,11 @@ function MaintenanceWithSudoMode({ employees = [] }) {
       return
     }
 
-    const token = getCookie('dtr_admin_token')
-    if (!token) {
-      setError('Admin session expired. Please login again.')
-      return
-    }
-
     setIsVerifying(true)
     setError('')
 
     try {
-      await verifyPassword(token, password)
+      await verifyPassword(password)
       setIsUnlocked(true)
       setPassword('')
     } catch (err) {

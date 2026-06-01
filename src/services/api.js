@@ -1,6 +1,87 @@
-// API service functions
 import { AUTH_API_BASE_URL } from '../utils/constants'
-import { getCookie } from '../utils/cookies'
+
+let refreshPromise = null
+
+async function refreshSession() {
+  if (!refreshPromise) {
+    refreshPromise = fetch(`${AUTH_API_BASE_URL}/auth/refresh`, {
+      method: 'POST',
+      credentials: 'include',
+    }).finally(() => {
+      refreshPromise = null
+    })
+  }
+  const response = await refreshPromise
+  if (!response.ok) {
+    throw new Error('Session expired')
+  }
+}
+
+/**
+ * Authenticated fetch — sends HttpOnly cookies set by the backend on login.
+ */
+export async function apiFetch(path, options = {}) {
+  const url = path.startsWith('http') ? path : `${AUTH_API_BASE_URL}${path}`
+  const isFormData = options.body instanceof FormData
+
+  const buildConfig = () => ({
+    credentials: 'include',
+    ...options,
+    headers: {
+      ...(options.body !== undefined && !isFormData ? { 'Content-Type': 'application/json' } : {}),
+      ...options.headers,
+    },
+  })
+
+  let config = buildConfig()
+  if (config.body && typeof config.body === 'object' && !isFormData) {
+    config = { ...config, body: JSON.stringify(config.body) }
+  }
+
+  let response = await fetch(url, config)
+
+  if (
+    response.status === 401 &&
+    !path.includes('/auth/login') &&
+    !path.includes('/auth/refresh')
+  ) {
+    try {
+      await refreshSession()
+      config = buildConfig()
+      if (config.body && typeof config.body === 'object' && !isFormData) {
+        config = { ...config, body: JSON.stringify(config.body) }
+      }
+      response = await fetch(url, config)
+    } catch {
+      throw new Error('Session expired. Please sign in again.')
+    }
+  }
+
+  return response
+}
+
+async function parseJsonResponse(response, fallbackMessage) {
+  if (!response.ok) {
+    let message = fallbackMessage
+    try {
+      const contentType = response.headers.get('content-type')
+      if (contentType?.includes('application/json')) {
+        const errorBody = await response.json()
+        if (errorBody?.message) message = errorBody.message
+      } else {
+        const textBody = await response.text()
+        if (textBody) message = textBody
+      }
+    } catch {
+      // ignore parse errors
+    }
+    throw new Error(message)
+  }
+  if (response.status === 204) {
+    return null
+  }
+  return response.json()
+}
 
 export const resolveProofUrl = (value) => {
   if (!value) return ''
@@ -12,153 +93,101 @@ export const resolveProofUrl = (value) => {
   return `${AUTH_API_BASE_URL}${value.startsWith('/') ? '' : '/'}${value}`
 }
 
-export const fetchEmployees = async (token) => {
-  const response = await fetch(`${AUTH_API_BASE_URL}/admin/dtr/employees`, {
-    headers: { Authorization: `Bearer ${token}` },
-  })
-  if (!response.ok) throw new Error(`Failed to fetch employees: ${response.status}`)
-  return response.json()
-}
-
-export const fetchAttendanceLogs = async (token) => {
-  const response = await fetch(`${AUTH_API_BASE_URL}/admin/dtr/attendance`, {
-    headers: { Authorization: `Bearer ${token}` },
-  })
-  if (!response.ok) throw new Error(`Failed to fetch attendance logs: ${response.status}`)
-  return response.json()
+export const fetchCurrentUser = async () => {
+  const response = await apiFetch('/auth/me')
+  return parseJsonResponse(response, 'Unable to load profile.')
 }
 
 export const loginAdmin = async (email, password) => {
-  const response = await fetch(`${AUTH_API_BASE_URL}/auth/login`, {
+  const response = await apiFetch('/auth/login', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password }),
+    body: { email, password },
   })
-
-  if (!response.ok) {
-    let message = 'Invalid email or password.'
-    try {
-      const contentType = response.headers.get('content-type')
-      if (contentType?.includes('application/json')) {
-        const errorBody = await response.json()
-        if (errorBody?.message) message = errorBody.message
-      } else {
-        const textBody = await response.text()
-        if (textBody) message = textBody
-      }
-    } catch {}
-    throw new Error(message)
-  }
-
-  return response.json()
+  return parseJsonResponse(response, 'Invalid email or password.')
 }
 
-export const registerEmployee = async (token, employeeData) => {
-  const response = await fetch(`${AUTH_API_BASE_URL}/admin/dtr/employees`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify(employeeData),
-  })
-
-  if (!response.ok) {
-    let message = 'Unable to register employee.'
-    try {
-      const errorBody = await response.json()
-      if (errorBody?.message) message = errorBody.message
-    } catch {}
-    throw new Error(message)
+export const logoutAdmin = async () => {
+  const response = await apiFetch('/auth/logout', { method: 'POST' })
+  if (!response.ok && response.status !== 204) {
+    await parseJsonResponse(response, 'Logout failed.')
   }
-
-  return response.json()
 }
 
-export const updateEmployee = async (token, employeeId, employeeData) => {
-  const response = await fetch(`${AUTH_API_BASE_URL}/admin/dtr/employees/${employeeId}`, {
+export const fetchEmployees = async () => {
+  const response = await apiFetch('/admin/dtr/employees')
+  return parseJsonResponse(response, `Failed to fetch employees: ${response.status}`)
+}
+
+export const fetchAttendanceLogs = async () => {
+  const response = await apiFetch('/admin/dtr/attendance')
+  return parseJsonResponse(response, `Failed to fetch attendance logs: ${response.status}`)
+}
+
+export const registerEmployee = async (employeeData) => {
+  const response = await apiFetch('/admin/dtr/employees', {
+    method: 'POST',
+    body: employeeData,
+  })
+  return parseJsonResponse(response, 'Unable to register employee.')
+}
+
+export const updateEmployee = async (employeeId, employeeData) => {
+  const response = await apiFetch(`/admin/dtr/employees/${employeeId}`, {
     method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify(employeeData),
+    body: employeeData,
   })
-
-  if (!response.ok) {
-    let message = 'Unable to update employee credentials.'
-    try {
-      const errorBody = await response.json()
-      if (errorBody?.message) message = errorBody.message
-    } catch {}
-    throw new Error(message)
-  }
-
-  return response.json()
+  return parseJsonResponse(response, 'Unable to update employee credentials.')
 }
 
-export const uploadAvatar = async (token, employeeId, file) => {
+export const uploadAvatar = async (employeeId, file) => {
   const formData = new FormData()
   formData.append('avatar', file)
 
-  const response = await fetch(`${AUTH_API_BASE_URL}/admin/dtr/employees/${employeeId}/avatar`, {
+  const response = await apiFetch(`/admin/dtr/employees/${employeeId}/avatar`, {
     method: 'POST',
-    headers: { Authorization: `Bearer ${token}` },
     body: formData,
   })
-
-  if (!response.ok) throw new Error('Failed to upload avatar image.')
-  return response.json()
+  return parseJsonResponse(response, 'Failed to upload avatar image.')
 }
 
-export const fetchProofImage = async (token, proofUrl) => {
-  const response = await fetch(proofUrl, {
-    headers: { Authorization: `Bearer ${token}` },
-  })
+export const fetchProofImage = async (proofUrl) => {
+  const response = await apiFetch(proofUrl.startsWith('http') ? proofUrl : resolveProofUrl(proofUrl))
   if (!response.ok) throw new Error('Failed to fetch proof image.')
   return response.blob()
 }
 
-export const fetchAuthenticatedImage = async (imageUrl, token) => {
-  const response = await fetch(imageUrl, {
-    headers: { Authorization: `Bearer ${token}` },
-  })
+export const fetchAuthenticatedImage = async (imageUrl) => {
+  const response = await apiFetch(imageUrl.startsWith('http') ? imageUrl : resolveProofUrl(imageUrl))
   if (!response.ok) throw new Error('Failed to fetch image.')
   return response.blob()
 }
 
-export const fetchRoles = async (token) => {
-  const response = await fetch(`${AUTH_API_BASE_URL}/roles`, {
-    headers: { Authorization: `Bearer ${token}` },
-  })
-  if (!response.ok) throw new Error(`Failed to fetch roles: ${response.status}`)
-  return response.json()
+export const fetchRoles = async () => {
+  const response = await apiFetch('/roles')
+  return parseJsonResponse(response, `Failed to fetch roles: ${response.status}`)
 }
 
-export const verifyPassword = async (token, password) => {
-  const response = await fetch(`${AUTH_API_BASE_URL}/auth/verify-password`, {
+export const verifyPassword = async (password) => {
+  const response = await apiFetch('/auth/verify-password', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
-    },
-    body: JSON.stringify({ password }),
+    body: { password },
   })
+  return parseJsonResponse(response, 'Incorrect password. Please try again.')
+}
 
-  if (!response.ok) {
-    let message = 'Incorrect password. Please try again.'
-    try {
-      const contentType = response.headers.get('content-type')
-      if (contentType?.includes('application/json')) {
-        const errorBody = await response.json()
-        if (errorBody?.message) message = errorBody.message
-      } else {
-        const textBody = await response.text()
-        if (textBody) message = textBody
-      }
-    } catch {}
-    throw new Error(message)
+export const deleteEmployeeAttendance = async (employeeId) => {
+  const response = await apiFetch(`/admin/dtr/attendance/employee/${employeeId}`, {
+    method: 'DELETE',
+  })
+  return parseJsonResponse(response, `Failed to delete records: ${response.status}`)
+}
+
+export const exportAttendancePdf = async (startDate, endDate, search) => {
+  let url = `/admin/dtr/attendance/export-pdf?startDate=${encodeURIComponent(startDate)}&endDate=${encodeURIComponent(endDate)}`
+  if (search?.trim()) {
+    url += `&search=${encodeURIComponent(search.trim())}`
   }
-
-  return response.json()
+  const response = await apiFetch(url)
+  if (!response.ok) throw new Error('Failed to generate PDF')
+  return response.blob()
 }

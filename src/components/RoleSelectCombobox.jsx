@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { AUTH_API_BASE_URL } from '../utils/constants'
-import { getCookie } from '../utils/cookies'
+import { fetchRoles } from '../services/api'
 
 export default function RoleSelectCombobox({ 
   value, 
@@ -24,22 +23,7 @@ export default function RoleSelectCombobox({
       setRoleFetchError(null)
       
       try {
-        const token = getCookie('authToken')
-        if (!token) {
-          throw new Error('Authentication token not found')
-        }
-
-        const response = await fetch(`${AUTH_API_BASE_URL}/admin/roles`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
-
-        if (!response.ok) {
-          throw new Error(`Failed to fetch roles: ${response.status}`)
-        }
-
-        const data = await response.json()
+        const data = await fetchRoles()
         
         // Map the roles data to combobox options format
         // Assuming API returns array of role objects with 'id' and 'name' properties

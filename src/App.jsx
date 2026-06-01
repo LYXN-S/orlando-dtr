@@ -13,7 +13,8 @@ import ConfirmDiscardModal from './components/ConfirmDiscardModal'
 import LogoutConfirmModal from './components/LogoutConfirmModal'
 import Toast from './components/Toast'
 import ZoomableImage from './components/ZoomableImage'
-import { setCookie, getCookie, deleteCookie } from './utils/cookies'
+import { getCookie, setCookie, deleteCookie } from './utils/cookies'
+import { migrateLegacyAuth } from './utils/migrateAuth'
 import { 
   MANILA_DATE_KEY_FORMATTER, 
   formatTimeShort, 
@@ -23,7 +24,9 @@ import {
   shiftDateKeyByDays 
 } from './utils/dateHelpers'
 import { 
-  loginAdmin, 
+  loginAdmin,
+  logoutAdmin,
+  fetchCurrentUser,
   registerEmployee, 
   updateEmployee, 
   uploadAvatar,
@@ -45,11 +48,13 @@ import './styles/Maintenance.css'
 import './styles/SudoMode.css'
 import './styles/Toast.css'
 
+migrateLegacyAuth()
+
+const DTR_ADMIN_ROLE = 'ROLE_SUPER_ADMIN'
+
 function App() {
-  // Auth state
-  const [isLoggedIn, setIsLoggedIn] = useState(
-    () => !!getCookie('dtr_admin_token') && getCookie('dtr_admin_role') === 'ROLE_SUPER_ADMIN'
-  )
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [isAuthChecking, setIsAuthChecking] = useState(true)
   const [isLoggingIn, setIsLoggingIn] = useState(false)
   const [loginForm, setLoginForm] = useState({ email: '', password: '' })
   const [keepLoggedIn, setKeepLoggedIn] = useState(() => getCookie('dtr_keep_logged_in') === 'true')
@@ -107,11 +112,28 @@ function App() {
   const { employees, setEmployees, attendanceLogs, setAttendanceLogs, isLoadingDashboard } = 
     useAttendanceData(isLoggedIn)
 
-  // Fetch roles when logged in
+  useEffect(() => {
+    let cancelled = false
+    fetchCurrentUser()
+      .then((profile) => {
+        if (!cancelled && profile.role === DTR_ADMIN_ROLE) {
+          setIsLoggedIn(true)
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setIsLoggedIn(false)
+      })
+      .finally(() => {
+        if (!cancelled) setIsAuthChecking(false)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
   useEffect(() => {
     if (!isLoggedIn) return
-    const token = getCookie('dtr_admin_token')
-    fetchRoles(token).then(setRoles).catch(() => setRoles([]))
+    fetchRoles().then(setRoles).catch(() => setRoles([]))
   }, [isLoggedIn])
 
   // Computed data
@@ -246,9 +268,11 @@ function App() {
 
     try {
       const data = await loginAdmin(loginForm.email.trim().toLowerCase(), loginForm.password)
+      if (data.role !== DTR_ADMIN_ROLE) {
+        await logoutAdmin().catch(() => {})
+        throw new Error('Only super administrators can access the DTR admin portal.')
+      }
       const expiryDays = keepLoggedIn ? 30 : 7
-      setCookie('dtr_admin_token', data.token, expiryDays)
-      setCookie('dtr_admin_role', data.role, expiryDays)
       setCookie('dtr_keep_logged_in', keepLoggedIn ? 'true' : 'false', expiryDays)
       setIsLoggedIn(true)
       setLoginForm({ email: '', password: '' })
@@ -263,9 +287,12 @@ function App() {
     setShowLogoutConfirm(true)
   }
 
-  const confirmLogout = () => {
-    deleteCookie('dtr_admin_token')
-    deleteCookie('dtr_admin_role')
+  const confirmLogout = async () => {
+    try {
+      await logoutAdmin()
+    } catch {
+      // Best-effort server logout
+    }
     deleteCookie('dtr_keep_logged_in')
     setIsLoggedIn(false)
     setLoginForm({ email: '', password: '' })
@@ -281,12 +308,6 @@ function App() {
 
   const handleRegisterEmployee = async (event, formData) => {
     event.preventDefault()
-    const token = getCookie('dtr_admin_token')
-    if (!token) {
-      setToast({ isVisible: true, message: 'Admin session expired. Please login again.', type: 'error' })
-      return
-    }
-
     setIsRegistering(true)
     try {
       const dataToSubmit = formData || {
@@ -298,7 +319,7 @@ function App() {
         address: registerForm.address.trim(),
       }
 
-      const newEmployee = await registerEmployee(token, dataToSubmit)
+      const newEmployee = await registerEmployee(dataToSubmit)
 
       setEmployees((current) => [...current, newEmployee])
       setRegisterForm({ email: '', firstName: '', lastName: '', position: '', contactNumber: '', address: '' })
@@ -392,19 +413,13 @@ function App() {
     const employeeId = viewingCredentialsEmployeeId
     if (!employeeId) return
 
-    const token = getCookie('dtr_admin_token')
-    if (!token) {
-      window.alert('Admin session expired. Please login again.')
-      return
-    }
-
     setIsSavingCredentials(true)
     try {
       if (profileAvatarFile) {
-        await uploadAvatar(token, employeeId, profileAvatarFile)
+        await uploadAvatar(employeeId, profileAvatarFile)
       }
 
-      const updatedEmployee = await updateEmployee(token, employeeId, {
+      const updatedEmployee = await updateEmployee(employeeId, {
         email: editingCredentialsForm.email.trim().toLowerCase(),
         firstName: editingCredentialsForm.firstName.trim(),
         lastName: editingCredentialsForm.lastName.trim(),
@@ -423,7 +438,6 @@ function App() {
   }
 
   const openProofPreview = async (entry) => {
-    const token = getCookie('dtr_admin_token')
     const rawProofUrl = resolveProofUrl(entry.photoUrl || entry.proofUrl)
 
     setProofPreviewError('')
@@ -435,14 +449,14 @@ function App() {
     setProofPreviewOpen(true)
     setIsLoadingProof(true)
 
-    if (!token || !rawProofUrl) {
+    if (!rawProofUrl) {
       setProofPreviewError('Unable to load proof image.')
       setIsLoadingProof(false)
       return
     }
 
     try {
-      const blob = await fetchProofImage(token, rawProofUrl)
+      const blob = await fetchProofImage(rawProofUrl)
       const objectUrl = URL.createObjectURL(blob)
       setProofPreviewUrl(objectUrl)
     } catch {
@@ -460,6 +474,14 @@ function App() {
     }
     setProofPreviewUrl('')
     setProofPreviewTitle('Proof Preview')
+  }
+
+  if (isAuthChecking) {
+    return (
+      <div className="login-page-wrapper" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
+        <div className="loading-spinner" />
+      </div>
+    )
   }
 
   if (!isLoggedIn) {

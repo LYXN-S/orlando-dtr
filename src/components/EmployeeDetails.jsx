@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import { resolveProofUrl, fetchAuthenticatedImage } from '../services/api'
-import { getCookie } from '../utils/cookies'
 
 export default function EmployeeDetails({
   employee,
@@ -15,17 +14,13 @@ export default function EmployeeDetails({
 
   useEffect(() => {
     if (employee?.avatarUrl) {
-      const token = getCookie('dtr_admin_token')
-      if (token) {
-        const fullUrl = resolveProofUrl(employee.avatarUrl)
-        fetchAuthenticatedImage(fullUrl, token)
-          .then(blob => {
-            const url = URL.createObjectURL(blob)
-            setAvatarBlobUrl(url)
-          })
-          .catch(err => {
-          })
-      }
+      const fullUrl = resolveProofUrl(employee.avatarUrl)
+      fetchAuthenticatedImage(fullUrl)
+        .then((blob) => {
+          const url = URL.createObjectURL(blob)
+          setAvatarBlobUrl(url)
+        })
+        .catch(() => {})
     }
 
     return () => {

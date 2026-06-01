@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import { exportAttendancePdf } from '../services/api'
 import StatCard from './StatCard'
 import StatusBadge from './StatusBadge'
 import EmptyState from './EmptyState'
@@ -150,35 +151,8 @@ export default function SummaryView({
   const handleExportPDF = async () => {
     try {
       setIsExporting(true)
-      
-      const token = document.cookie
-        .split('; ')
-        .find(row => row.startsWith('dtr_admin_token='))
-        ?.split('=')[1]
 
-      if (!token) {
-        alert('Authentication token not found. Please log in again.')
-        return
-      }
-
-      // Build URL with search parameter if present
-      let url = `https://api.orlandoprestige.com/api/v1/admin/dtr/attendance/export-pdf?startDate=${selectedDate}&endDate=${toDate}`
-      if (summarySearch.trim()) {
-        url += `&search=${encodeURIComponent(summarySearch.trim())}`
-      }
-
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to generate PDF')
-      }
-
-      const blob = await response.blob()
+      const blob = await exportAttendancePdf(selectedDate, toDate, summarySearch)
       const blobUrl = window.URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = blobUrl

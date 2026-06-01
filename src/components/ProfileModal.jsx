@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import { resolveProofUrl, fetchAuthenticatedImage } from '../services/api'
-import { getCookie } from '../utils/cookies'
 import RoleCombobox from './RoleCombobox'
 import Toast from './Toast'
 
@@ -21,17 +20,13 @@ export default function ProfileModal({
 
   useEffect(() => {
     if (employee?.avatarUrl && !profileAvatarPreview) {
-      const token = getCookie('dtr_admin_token')
-      if (token) {
-        const fullUrl = resolveProofUrl(employee.avatarUrl)
-        fetchAuthenticatedImage(fullUrl, token)
-          .then(blob => {
-            const url = URL.createObjectURL(blob)
-            setAvatarBlobUrl(url)
-          })
-          .catch(err => {
-          })
-      }
+      const fullUrl = resolveProofUrl(employee.avatarUrl)
+      fetchAuthenticatedImage(fullUrl)
+        .then((blob) => {
+          const url = URL.createObjectURL(blob)
+          setAvatarBlobUrl(url)
+        })
+        .catch(() => {})
     }
 
     return () => {
