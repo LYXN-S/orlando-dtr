@@ -47,11 +47,12 @@ export default function Sidebar({ activeTab, setActiveTab, handleLogout }) {
       if (activeButton) {
         const navRect = navRef.current.getBoundingClientRect()
         const buttonRect = activeButton.getBoundingClientRect()
-        const offsetY = buttonRect.top - navRect.top
+        const indicatorHeight = 40
+        const offsetY = buttonRect.top - navRect.top + (buttonRect.height - indicatorHeight) / 2
         
         setIndicatorStyle({
           transform: `translateY(${offsetY}px)`,
-          height: `${buttonRect.height}px`
+          height: `${indicatorHeight}px`
         })
       }
     }
