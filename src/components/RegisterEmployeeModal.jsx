@@ -129,7 +129,7 @@ export default function RegisterEmployeeModal({
       <form onSubmit={onSubmit}>
         <div className="modal-form-grid">
         <label>
-          <span className="field-label-required">First Name *</span>
+          <span className="field-label-required">First Name</span>
           <input
             type="text"
             value={values.firstName}
@@ -143,7 +143,7 @@ export default function RegisterEmployeeModal({
           )}
         </label>
         <label>
-          <span className="field-label-required">Last Name *</span>
+          <span className="field-label-required">Last Name</span>
           <input
             type="text"
             value={values.lastName}
@@ -157,7 +157,7 @@ export default function RegisterEmployeeModal({
           )}
         </label>
         <label className="full-width">
-          <span className="field-label-required">Email *</span>
+          <span className="field-label-required">Email</span>
           <input
             type="email"
             value={values.email}
@@ -179,7 +179,7 @@ export default function RegisterEmployeeModal({
           )}
         </label>
         <label>
-          <span className="field-label-required">Phone Number *</span>
+          <span className="field-label-required">Phone Number</span>
           <input
             type="text"
             value={values.contactNumber}
@@ -201,7 +201,7 @@ export default function RegisterEmployeeModal({
           )}
         </label>
         <label>
-          <span className="field-label-required">Position *</span>
+          <span className="field-label-required">Position</span>
           <RoleCombobox
             value={values.position}
             onChange={(selectedRole) => handleChange('position', selectedRole)}
@@ -217,7 +217,7 @@ export default function RegisterEmployeeModal({
           )}
         </label>
         <label className="full-width">
-          <span className="field-label-required">Street Address *</span>
+          <span className="field-label-required">Street Address</span>
           <input
             type="text"
             value={values.streetAddress}
@@ -231,7 +231,7 @@ export default function RegisterEmployeeModal({
           )}
         </label>
         <label>
-          <span className="field-label-required">City *</span>
+          <span className="field-label-required">City</span>
           <input
             type="text"
             value={values.city}
@@ -245,7 +245,7 @@ export default function RegisterEmployeeModal({
           )}
         </label>
         <label>
-          <span className="field-label-required">Province *</span>
+          <span className="field-label-required">Province</span>
           <input
             type="text"
             value={values.province}
