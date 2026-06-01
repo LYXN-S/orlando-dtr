@@ -181,9 +181,9 @@ export default function RegisterEmployeeModal({
         <label>
           <span className="field-label-required">Phone Number</span>
           <input
-            type="text"
+            type="tel"
             value={values.contactNumber}
-            onChange={(e) => handleChange('contactNumber', e.target.value)}
+            onChange={(e) => handleChange('contactNumber', e.target.value.replace(/[^0-9+\s\-()]/g, ''))}
             onBlur={() => handleBlur('contactNumber')}
             placeholder="+63 917 123 4567"
             className={touched.contactNumber && errors.contactNumber ? 'input-error' : ''}

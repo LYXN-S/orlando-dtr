@@ -175,12 +175,12 @@ export default function ProfileModal({
               <label className="profile-field-label">Phone Number</label>
               {isEditing ? (
                 <input
-                  type="text"
+                  type="tel"
                   value={editingCredentialsForm.contactNumber}
                   onChange={(e) =>
                     setEditingCredentialsForm((prev) => ({
                       ...prev,
-                      contactNumber: e.target.value,
+                      contactNumber: e.target.value.replace(/[^0-9+\s\-()]/g, ''),
                     }))
                   }
                   placeholder="+63 917 123 4567"
