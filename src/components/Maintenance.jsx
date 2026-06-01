@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { getCookie } from '../utils/cookies'
 import { verifyPassword, deleteEmployeeAttendance } from '../services/api'
 import { API_ORIGIN } from '../utils/constants'
 
@@ -87,17 +86,11 @@ function Maintenance({ employees = [] }) {
       return
     }
 
-    const token = getCookie('dtr_admin_token')
-    if (!token) {
-      setPasswordError('Admin session expired. Please login again.')
-      return
-    }
-
     setIsVerifying(true)
     setPasswordError('')
 
     try {
-      await verifyPassword(token, password)
+      await verifyPassword(password)
       // Password verified, proceed with deletion
       setShowPasswordModal(false)
       setPassword('')
