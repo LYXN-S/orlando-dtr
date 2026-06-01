@@ -33,6 +33,8 @@ function Maintenance({ employees = [] }) {
       setIsDeletingAll(false)
     }
   }
+
+  const filteredEmployees = employees.filter(emp => {
     if (!searchQuery.trim()) return true
     const query = searchQuery.toLowerCase()
     const fullName = `${emp.firstName} ${emp.lastName}`.toLowerCase()
