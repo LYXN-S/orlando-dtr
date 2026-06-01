@@ -1,8 +1,7 @@
 import { useState } from 'react'
 import { getCookie } from '../utils/cookies'
 import { verifyPassword, deleteEmployeeAttendance } from '../services/api'
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://206.189.87.46.nip.io'
+import { API_ORIGIN } from '../utils/constants'
 
 function Maintenance({ employees = [] }) {
   const [selectedEmployeeIds, setSelectedEmployeeIds] = useState([])
@@ -270,7 +269,7 @@ function Maintenance({ employees = [] }) {
                                 <div className="employee-avatar">
                                   {emp.avatarUrl ? (
                                     <img 
-                                      src={`${API_BASE_URL}${emp.avatarUrl}`} 
+                                      src={`${API_ORIGIN}${emp.avatarUrl}`} 
                                       alt={`${emp.firstName} ${emp.lastName}`}
                                       onError={(e) => {
                                         e.target.style.display = 'none'
@@ -346,7 +345,7 @@ function Maintenance({ employees = [] }) {
                         <div className="preview-avatar-small">
                           {emp.avatarUrl ? (
                             <img 
-                              src={`${API_BASE_URL}${emp.avatarUrl}`} 
+                              src={`${API_ORIGIN}${emp.avatarUrl}`} 
                               alt={`${emp.firstName} ${emp.lastName}`}
                               onError={(e) => {
                                 e.target.style.display = 'none'
