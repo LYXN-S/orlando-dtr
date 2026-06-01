@@ -182,6 +182,20 @@ export const deleteEmployeeAttendance = async (employeeId) => {
   return parseJsonResponse(response, `Failed to delete records: ${response.status}`)
 }
 
+export const deactivateEmployee = async (employeeId) => {
+  const response = await apiFetch(`/admin/dtr/employees/${employeeId}/deactivate`, {
+    method: 'PATCH',
+  })
+  return parseJsonResponse(response, 'Failed to deactivate employee.')
+}
+
+export const activateEmployee = async (employeeId) => {
+  const response = await apiFetch(`/admin/dtr/employees/${employeeId}/activate`, {
+    method: 'PATCH',
+  })
+  return parseJsonResponse(response, 'Failed to activate employee.')
+}
+
 export const exportAttendancePdf = async (startDate, endDate, search) => {
   let url = `/admin/dtr/attendance/export-pdf?startDate=${encodeURIComponent(startDate)}&endDate=${encodeURIComponent(endDate)}`
   if (search?.trim()) {

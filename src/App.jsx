@@ -629,6 +629,9 @@ function App() {
           isSavingCredentials={isSavingCredentials}
           handleSaveCredentials={handleSaveCredentials}
           roles={roles}
+          onEmployeeStatusChange={(updated) => {
+            setEmployees((current) => current.map((emp) => emp.id === updated.id ? updated : emp))
+          }}
         />
       </Modal>
 

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { resolveProofUrl, fetchAuthenticatedImage } from '../services/api'
+import { resolveProofUrl, fetchAuthenticatedImage, deactivateEmployee, activateEmployee } from '../services/api'
 import RoleCombobox from './RoleCombobox'
 import Toast from './Toast'
 
@@ -11,12 +11,15 @@ export default function ProfileModal({
   handleAvatarChange,
   isSavingCredentials,
   handleSaveCredentials,
+  onEmployeeStatusChange,
 }) {
   const [avatarBlobUrl, setAvatarBlobUrl] = useState('')
   const [isEditing, setIsEditing] = useState(false)
   const [showSuccessToast, setShowSuccessToast] = useState(false)
   const [showDeactivateConfirm, setShowDeactivateConfirm] = useState(false)
   const [originalFormData, setOriginalFormData] = useState(null)
+  const [isTogglingStatus, setIsTogglingStatus] = useState(false)
+  const [statusToast, setStatusToast] = useState({ isVisible: false, message: '', type: 'success' })
 
   useEffect(() => {
     if (employee?.avatarUrl && !profileAvatarPreview) {
@@ -66,10 +69,27 @@ export default function ProfileModal({
     setShowDeactivateConfirm(true)
   }
 
-  const handleConfirmDeactivate = () => {
-    // TODO: Implement actual deactivation API call
-    window.alert('Account deactivation functionality will be implemented soon.')
-    setShowDeactivateConfirm(false)
+  const handleConfirmDeactivate = async () => {
+    setIsTogglingStatus(true)
+    try {
+      const isActive = employee.active !== false
+      const updated = isActive
+        ? await deactivateEmployee(employee.id)
+        : await activateEmployee(employee.id)
+      setShowDeactivateConfirm(false)
+      setStatusToast({
+        isVisible: true,
+        message: isActive
+          ? `${employee.firstName}'s account has been deactivated.`
+          : `${employee.firstName}'s account has been reactivated.`,
+        type: isActive ? 'error' : 'success',
+      })
+      if (onEmployeeStatusChange) onEmployeeStatusChange(updated)
+    } catch (err) {
+      setStatusToast({ isVisible: true, message: err.message, type: 'error' })
+    } finally {
+      setIsTogglingStatus(false)
+    }
   }
 
   const handleCancelDeactivate = () => {
@@ -238,8 +258,9 @@ export default function ProfileModal({
             type="button"
             className="deactivate-btn"
             onClick={handleDeactivateClick}
+            disabled={isTogglingStatus}
           >
-            Deactivate Account
+            {employee.active === false ? 'Reactivate Account' : 'Deactivate Account'}
           </button>
           {isEditing ? (
             <div className="profile-actions-group">
@@ -285,17 +306,20 @@ export default function ProfileModal({
                 <line x1="12" y1="16" x2="12.01" y2="16" />
               </svg>
             </div>
-            <h3>Deactivate Account?</h3>
+            <h3>{employee.active === false ? 'Reactivate Account?' : 'Deactivate Account?'}</h3>
             <p>
-              Are you sure you want to deactivate this account? This action cannot be undone and the employee will lose access to the system.
+              {employee.active === false
+                ? `Are you sure you want to reactivate ${employee.firstName}'s account? They will regain access to the system.`
+                : `Are you sure you want to deactivate ${employee.firstName}'s account? They will lose access to the system.`}
             </p>
             <div className="confirm-discard-actions">
               <button
                 type="button"
                 className="discard-btn"
                 onClick={handleConfirmDeactivate}
+                disabled={isTogglingStatus}
               >
-                Confirm Deactivate
+                {isTogglingStatus ? 'Processing...' : employee.active === false ? 'Confirm Reactivate' : 'Confirm Deactivate'}
               </button>
               <button
                 type="button"
@@ -316,6 +340,15 @@ export default function ProfileModal({
         isVisible={showSuccessToast}
         onClose={() => setShowSuccessToast(false)}
         duration={3000}
+      />
+
+      {/* Status change Toast */}
+      <Toast
+        message={statusToast.message}
+        type={statusToast.type}
+        isVisible={statusToast.isVisible}
+        onClose={() => setStatusToast((t) => ({ ...t, isVisible: false }))}
+        duration={4000}
       />
     </>
   )
