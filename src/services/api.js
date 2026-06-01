@@ -182,6 +182,11 @@ export const deleteEmployeeAttendance = async (employeeId) => {
   return parseJsonResponse(response, `Failed to delete records: ${response.status}`)
 }
 
+export const deleteAllEmployees = async () => {
+  const response = await apiFetch('/admin/dtr/employees', { method: 'DELETE' })
+  return parseJsonResponse(response, 'Failed to delete all employees.')
+}
+
 export const deactivateEmployee = async (employeeId) => {
   const response = await apiFetch(`/admin/dtr/employees/${employeeId}/deactivate`, {
     method: 'PATCH',

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { verifyPassword, deleteEmployeeAttendance } from '../services/api'
+import { verifyPassword, deleteEmployeeAttendance, deleteAllEmployees } from '../services/api'
 import { API_ORIGIN } from '../utils/constants'
 
 function Maintenance({ employees = [] }) {
@@ -17,7 +17,22 @@ function Maintenance({ employees = [] }) {
   const [passwordError, setPasswordError] = useState('')
   const [showPassword, setShowPassword] = useState(false)
 
-  const filteredEmployees = employees.filter(emp => {
+  const [isDeletingAll, setIsDeletingAll] = useState(false)
+  const [deleteAllResult, setDeleteAllResult] = useState(null)
+
+  const handleDeleteAllEmployees = async () => {
+    if (!window.confirm('DEBUG: Permanently delete ALL employees? This cannot be undone.')) return
+    setIsDeletingAll(true)
+    setDeleteAllResult(null)
+    try {
+      const result = await deleteAllEmployees()
+      setDeleteAllResult({ success: true, message: `Deleted ${result.deleted} employee(s).` })
+    } catch (err) {
+      setDeleteAllResult({ success: false, message: err.message })
+    } finally {
+      setIsDeletingAll(false)
+    }
+  }
     if (!searchQuery.trim()) return true
     const query = searchQuery.toLowerCase()
     const fullName = `${emp.firstName} ${emp.lastName}`.toLowerCase()
@@ -415,6 +430,38 @@ function Maintenance({ employees = [] }) {
             </div>
           </div>
         </div>
+
+      {/* DEBUG: Delete All Employees */}
+      <div className="maintenance-content" style={{ marginTop: '1.5rem' }}>
+        <div className="maintenance-card danger-zone" style={{ borderColor: '#7f1d1d' }}>
+          <div className="card-header">
+            <h3 style={{ color: '#7f1d1d' }}>🐛 Debug Tools</h3>
+            <span className="danger-badge" style={{ background: '#7f1d1d' }}>Dev Only</span>
+          </div>
+          <div className="maintenance-section">
+            <h4>Delete All Employees (Permanent)</h4>
+            <p className="section-description" style={{ color: '#7f1d1d' }}>
+              Permanently deletes all employee records from the database. For debugging only.
+            </p>
+            <button
+              className="btn-delete-all"
+              onClick={handleDeleteAllEmployees}
+              disabled={isDeletingAll}
+              style={{ marginTop: '1rem' }}
+            >
+              {isDeletingAll ? 'Deleting...' : '🗑️ Delete ALL Employees'}
+            </button>
+            {deleteAllResult && (
+              <div className={`delete-result ${deleteAllResult.success ? 'success' : 'error'}`} style={{ marginTop: '0.75rem' }}>
+                <div className="result-icon">{deleteAllResult.success ? '✓' : '✗'}</div>
+                <div className="result-content">
+                  <div className="result-message">{deleteAllResult.message}</div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
 
       {/* Password Verification Modal */}
       {showPasswordModal && selectedEmployees.length > 0 && (
