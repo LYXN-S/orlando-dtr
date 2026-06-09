@@ -1,6 +1,3 @@
-import { useState, useEffect } from 'react'
-import { resolveProofUrl, fetchAuthenticatedImage } from '../services/api'
-
 export default function EmployeeDetails({
   employee,
   logs,
@@ -10,26 +7,6 @@ export default function EmployeeDetails({
   formatDate,
   formatTimeShort,
 }) {
-  const [avatarBlobUrl, setAvatarBlobUrl] = useState('')
-
-  useEffect(() => {
-    if (employee?.avatarUrl) {
-      const fullUrl = resolveProofUrl(employee.avatarUrl)
-      fetchAuthenticatedImage(fullUrl)
-        .then((blob) => {
-          const url = URL.createObjectURL(blob)
-          setAvatarBlobUrl(url)
-        })
-        .catch(() => {})
-    }
-
-    return () => {
-      if (avatarBlobUrl) {
-        URL.revokeObjectURL(avatarBlobUrl)
-      }
-    }
-  }, [employee?.avatarUrl])
-
   if (!employee) {
     return <p className="empty-state">Employee not found.</p>
   }
@@ -58,8 +35,12 @@ export default function EmployeeDetails({
       <div className="employee-detail-header">
         <div className="employee-detail-info">
           <div className="employee-detail-avatar">
-            {avatarBlobUrl ? (
-              <img src={avatarBlobUrl} alt={`${employee.firstName} ${employee.lastName}`} />
+            {employee.avatarUrl ? (
+              <img
+                src={employee.avatarUrl}
+                alt={`${employee.firstName} ${employee.lastName}`}
+                onError={(e) => { e.currentTarget.style.display = 'none' }}
+              />
             ) : (
               <span>{employee.firstName.charAt(0)}{employee.lastName.charAt(0)}</span>
             )}

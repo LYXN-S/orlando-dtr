@@ -1,31 +1,16 @@
 import { useState, useEffect, useMemo } from 'react'
-import { resolveProofUrl, fetchAuthenticatedImage } from '../services/api'
 import RoleCombobox from './RoleCombobox'
 import Pagination from './Pagination'
 
-function AvatarImage({ employee, className, size = 'medium' }) {
-  const [avatarBlobUrl, setAvatarBlobUrl] = useState('')
-
-  useEffect(() => {
-    if (employee?.avatarUrl) {
-      const fullUrl = resolveProofUrl(employee.avatarUrl)
-      fetchAuthenticatedImage(fullUrl)
-        .then((blob) => {
-          const url = URL.createObjectURL(blob)
-          setAvatarBlobUrl(url)
-        })
-        .catch(() => {})
-    }
-
-    return () => {
-      if (avatarBlobUrl) {
-        URL.revokeObjectURL(avatarBlobUrl)
-      }
-    }
-  }, [employee?.avatarUrl])
-
-  if (avatarBlobUrl) {
-    return <img src={avatarBlobUrl} alt={`${employee.firstName} ${employee.lastName}`} />
+function AvatarImage({ employee }) {
+  if (employee?.avatarUrl) {
+    return (
+      <img
+        src={employee.avatarUrl}
+        alt={`${employee.firstName} ${employee.lastName}`}
+        onError={(e) => { e.currentTarget.style.display = 'none' }}
+      />
+    )
   }
 
   return (
@@ -55,9 +40,6 @@ export default function EmployeesList({
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 10
 
-  // No need to manually extract positions - RoleCombobox fetches from API
-
-  // Apply filters and sorting
   const filteredAndSortedEmployees = useMemo(() => {
     let result = [...employees]
 

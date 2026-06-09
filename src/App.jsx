@@ -30,8 +30,6 @@ import {
   registerEmployee, 
   updateEmployee, 
   uploadAvatar,
-  fetchProofImage,
-  resolveProofUrl,
   fetchRoles,
 } from './services/api'
 import { useAttendanceData } from './hooks/useAttendanceData'
@@ -67,7 +65,6 @@ function App() {
   // Loading states
   const [isRegistering, setIsRegistering] = useState(false)
   const [isSavingCredentials, setIsSavingCredentials] = useState(false)
-  const [isLoadingProof, setIsLoadingProof] = useState(false)
 
   // Modal states
   const [registerModalOpen, setRegisterModalOpen] = useState(false)
@@ -143,7 +140,7 @@ function App() {
         const employee = employees.find((e) => e.id === log.employeeId)
         return {
           ...log,
-          photoUrl: resolveProofUrl(log.photoUrl || log.proofUrl),
+          photoUrl: log.photoUrl || log.proofUrl,
           fullName: employee ? `${employee.firstName} ${employee.lastName}` : log.employeeName || 'Unknown',
           position: employee?.position || log.employeePosition || '—',
         }
@@ -437,33 +434,24 @@ function App() {
     }
   }
 
-  const openProofPreview = async (entry) => {
-    const rawProofUrl = resolveProofUrl(entry.photoUrl || entry.proofUrl)
+  const openProofPreview = (entry) => {
+    const rawProofUrl = entry.photoUrl || entry.proofUrl
 
     setProofPreviewError('')
     if (proofPreviewUrl.startsWith('blob:')) {
       URL.revokeObjectURL(proofPreviewUrl)
     }
-    setProofPreviewUrl('')
     setProofPreviewTitle(`${entry.fullName} - Proof`)
-    setProofPreviewOpen(true)
-    setIsLoadingProof(true)
 
     if (!rawProofUrl) {
+      setProofPreviewUrl('')
       setProofPreviewError('Unable to load proof image.')
-      setIsLoadingProof(false)
+      setProofPreviewOpen(true)
       return
     }
 
-    try {
-      const blob = await fetchProofImage(rawProofUrl)
-      const objectUrl = URL.createObjectURL(blob)
-      setProofPreviewUrl(objectUrl)
-    } catch {
-      setProofPreviewError('Failed to load proof image.')
-    } finally {
-      setIsLoadingProof(false)
-    }
+    setProofPreviewUrl(rawProofUrl)
+    setProofPreviewOpen(true)
   }
 
   const closeProofPreview = () => {
@@ -636,12 +624,7 @@ function App() {
       </Modal>
 
       <Modal isOpen={proofPreviewOpen} onClose={closeProofPreview} title={proofPreviewTitle}>
-        {isLoadingProof ? (
-          <div className="proof-preview-loading">
-            <div className="loading-spinner" />
-            <p>Loading proof image...</p>
-          </div>
-        ) : proofPreviewError ? (
+        {proofPreviewError ? (
           <div className="proof-preview-error">
             <p>{proofPreviewError}</p>
           </div>

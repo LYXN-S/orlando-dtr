@@ -279,7 +279,7 @@ function Maintenance({ employees = [] }) {
                                 <div className="employee-avatar">
                                   {emp.avatarUrl ? (
                                     <img 
-                                      src={`${API_ORIGIN}${emp.avatarUrl}`} 
+                                      src={emp.avatarUrl} 
                                       alt={`${emp.firstName} ${emp.lastName}`}
                                       onError={(e) => {
                                         e.target.style.display = 'none'
@@ -355,7 +355,7 @@ function Maintenance({ employees = [] }) {
                         <div className="preview-avatar-small">
                           {emp.avatarUrl ? (
                             <img 
-                              src={`${API_ORIGIN}${emp.avatarUrl}`} 
+                              src={emp.avatarUrl} 
                               alt={`${emp.firstName} ${emp.lastName}`}
                               onError={(e) => {
                                 e.target.style.display = 'none'

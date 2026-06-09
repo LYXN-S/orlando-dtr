@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
-import { resolveProofUrl, fetchAuthenticatedImage, deactivateEmployee, activateEmployee } from '../services/api'
+import { useState } from 'react'
+import { deactivateEmployee, activateEmployee } from '../services/api'
 import RoleCombobox from './RoleCombobox'
 import Toast from './Toast'
 
@@ -13,31 +13,12 @@ export default function ProfileModal({
   handleSaveCredentials,
   onEmployeeStatusChange,
 }) {
-  const [avatarBlobUrl, setAvatarBlobUrl] = useState('')
   const [isEditing, setIsEditing] = useState(false)
   const [showSuccessToast, setShowSuccessToast] = useState(false)
   const [showDeactivateConfirm, setShowDeactivateConfirm] = useState(false)
   const [originalFormData, setOriginalFormData] = useState(null)
   const [isTogglingStatus, setIsTogglingStatus] = useState(false)
   const [statusToast, setStatusToast] = useState({ isVisible: false, message: '', type: 'success' })
-
-  useEffect(() => {
-    if (employee?.avatarUrl && !profileAvatarPreview) {
-      const fullUrl = resolveProofUrl(employee.avatarUrl)
-      fetchAuthenticatedImage(fullUrl)
-        .then((blob) => {
-          const url = URL.createObjectURL(blob)
-          setAvatarBlobUrl(url)
-        })
-        .catch(() => {})
-    }
-
-    return () => {
-      if (avatarBlobUrl) {
-        URL.revokeObjectURL(avatarBlobUrl)
-      }
-    }
-  }, [employee?.avatarUrl, profileAvatarPreview])
 
   if (!employee) return null
 
@@ -104,8 +85,12 @@ export default function ProfileModal({
           <div className="profile-avatar-xl">
             {profileAvatarPreview ? (
               <img src={profileAvatarPreview} alt="Profile" />
-            ) : avatarBlobUrl ? (
-              <img src={avatarBlobUrl} alt="Profile" />
+            ) : employee.avatarUrl ? (
+              <img
+                src={employee.avatarUrl}
+                alt="Profile"
+                onError={(e) => { e.currentTarget.style.display = 'none' }}
+              />
             ) : (
               <span>{employee.firstName.charAt(0)}{employee.lastName.charAt(0)}</span>
             )}
