@@ -163,7 +163,7 @@ export const fetchAuthenticatedImage = async (imageUrl) => {
 }
 
 export const fetchRoles = async () => {
-  const response = await apiFetch('/roles')
+  const response = await apiFetch('/users/admin/roles')
   return parseJsonResponse(response, `Failed to fetch roles: ${response.status}`)
 }
 
