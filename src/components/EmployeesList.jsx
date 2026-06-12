@@ -149,6 +149,12 @@ export default function EmployeesList({
           >
             Absent
           </button>
+          <button
+            className={`filter-btn ${employeeFilterStatus === 'deactivated' ? 'active' : ''}`}
+            onClick={() => setEmployeeFilterStatus('deactivated')}
+          >
+            Deactivated
+          </button>
         </div>
         <div className="employees-header-actions">
           <button className="export-btn" onClick={() => window.alert('Export to CSV functionality coming soon!')}>
@@ -245,7 +251,9 @@ export default function EmployeesList({
                       <h3>{`${emp.firstName} ${emp.lastName}`}</h3>
                       <p className="employee-card-position">{emp.position}</p>
                       <div className="employee-card-status">
-                        {status?.timedIn ? (
+                        {emp.active === false ? (
+                          <span className="status-badge" style={{ backgroundColor: '#e5e7eb', color: '#374151' }}>Deactivated</span>
+                        ) : status?.timedIn ? (
                           <>
                             <span className="status-badge status-present">Present</span>
                             <span className="status-time">{formatTimeShort(status.timeInValue)}</span>
@@ -327,13 +335,15 @@ export default function EmployeesList({
                         <td>{emp.position}</td>
                         <td>{emp.contactNumber}</td>
                         <td>
-                          {status?.timedIn ? (
+                          {emp.active === false ? (
+                            <span className="status-badge" style={{ backgroundColor: '#e5e7eb', color: '#374151' }}>Deactivated</span>
+                          ) : status?.timedIn ? (
                             <span className="status-badge status-present">Present</span>
                           ) : (
                             <span className="status-badge status-absent">Absent</span>
                           )}
                         </td>
-                        <td>{status?.timedIn ? formatTimeShort(status.timeInValue) : '—'}</td>
+                        <td>{emp.active === false ? '—' : (status?.timedIn ? formatTimeShort(status.timeInValue) : '—')}</td>
                       </tr>
                     )
                   })}
