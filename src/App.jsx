@@ -12,6 +12,7 @@ import ProfileModal from './components/ProfileModal'
 import ConfirmDiscardModal from './components/ConfirmDiscardModal'
 import LogoutConfirmModal from './components/LogoutConfirmModal'
 import Toast from './components/Toast'
+import SuccessModal from './components/SuccessModal'
 import ZoomableImage from './components/ZoomableImage'
 import { getCookie, setCookie, deleteCookie } from './utils/cookies'
 import { migrateLegacyAuth } from './utils/migrateAuth'
@@ -60,6 +61,7 @@ function App() {
 
   // Toast notification state
   const [toast, setToast] = useState({ isVisible: false, message: '', type: 'success' })
+  const [successModal, setSuccessModal] = useState({ isOpen: false, title: '', message: '' })
   const [newEmployeeId, setNewEmployeeId] = useState(null)
 
   // Loading states
@@ -180,9 +182,14 @@ function App() {
     if (employeeFilterStatus !== 'all') {
       const todayLogs = logsWithEmployee.filter((log) => getDateOnly(log.timeIn) === todayDate)
       const presentIds = new Set(todayLogs.map((log) => log.employeeId))
-      result = result.filter((emp) =>
-        employeeFilterStatus === 'present' ? presentIds.has(emp.id) : !presentIds.has(emp.id)
-      )
+      
+      if (employeeFilterStatus === 'deactivated') {
+        result = result.filter(emp => emp.active === false)
+      } else if (employeeFilterStatus === 'present') {
+        result = result.filter(emp => emp.active !== false && presentIds.has(emp.id))
+      } else if (employeeFilterStatus === 'absent') {
+        result = result.filter(emp => emp.active !== false && !presentIds.has(emp.id))
+      }
     }
     return result
   }, [employees, employeeSearch, employeeFilterStatus, logsWithEmployee, todayDate])
@@ -200,8 +207,8 @@ function App() {
     })
   }, [employees, logsWithEmployee, todayDate])
 
-  const presentCount = employeeStatus.filter((emp) => emp.timedIn).length
-  const absentCount = employees.length - presentCount
+  const presentCount = employeeStatus.filter((emp) => emp.timedIn && emp.active !== false).length
+  const absentCount = employees.filter(emp => emp.active !== false).length - presentCount
   const todayLogsCount = logsWithEmployee.filter((log) => getDateOnly(log.timeIn) === todayDate).length
 
   const filteredSummaryLogs = useMemo(() => {
@@ -323,11 +330,11 @@ function App() {
       setRegisterModalOpen(false)
       setRegisterFormHasChanges(false)
       
-      // Show success toast and highlight new employee
-      setToast({ 
-        isVisible: true, 
-        message: `✅ ${newEmployee.firstName} ${newEmployee.lastName} successfully registered!`, 
-        type: 'success' 
+      // Show success modal and highlight new employee
+      setSuccessModal({ 
+        isOpen: true, 
+        title: 'Registration Successful',
+        message: `${newEmployee.firstName} ${newEmployee.lastName} has been successfully registered.` 
       })
       setNewEmployeeId(newEmployee.id)
       
@@ -598,6 +605,7 @@ function App() {
           onCancel={handleCloseRegisterModal}
           onFormChangeDetected={setRegisterFormHasChanges}
           roles={roles}
+          employees={employees}
         />
       </Modal>
 
@@ -654,6 +662,13 @@ function App() {
         type={toast.type}
         isVisible={toast.isVisible}
         onClose={() => setToast({ ...toast, isVisible: false })}
+      />
+
+      <SuccessModal
+        isOpen={successModal.isOpen}
+        title={successModal.title}
+        message={successModal.message}
+        onClose={() => setSuccessModal({ ...successModal, isOpen: false })}
       />
 
       <LogoutConfirmModal
