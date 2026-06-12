@@ -143,7 +143,7 @@ export const uploadAvatar = async (employeeId, file) => {
   const formData = new FormData()
   formData.append('avatar', file)
 
-  const response = await apiFetch(`/admin/dtr/employees/${employeeId}/avatar`, {
+  const response = await apiFetch(`/users/admin/employees/${employeeId}/avatar`, {
     method: 'POST',
     body: formData,
   })
