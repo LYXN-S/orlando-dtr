@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { deactivateEmployee, activateEmployee } from '../services/api'
 import RoleCombobox from './RoleCombobox'
 import Toast from './Toast'
+import SuccessModal from './SuccessModal'
 
 export default function ProfileModal({
   employee,
@@ -14,7 +15,7 @@ export default function ProfileModal({
   onEmployeeStatusChange,
 }) {
   const [isEditing, setIsEditing] = useState(false)
-  const [showSuccessToast, setShowSuccessToast] = useState(false)
+  const [showSuccessModal, setShowSuccessModal] = useState(false)
   const [showDeactivateConfirm, setShowDeactivateConfirm] = useState(false)
   const [originalFormData, setOriginalFormData] = useState(null)
   const [isTogglingStatus, setIsTogglingStatus] = useState(false)
@@ -40,10 +41,10 @@ export default function ProfileModal({
   const onSubmit = async (e) => {
     e.preventDefault()
     await handleSaveCredentials(e)
-    // After successful save, exit edit mode and show success toast
+    // After successful save, exit edit mode and show success modal
     setIsEditing(false)
     setOriginalFormData(null)
-    setShowSuccessToast(true)
+    setShowSuccessModal(true)
   }
 
   const handleDeactivateClick = () => {
@@ -318,13 +319,12 @@ export default function ProfileModal({
         </div>
       )}
 
-      {/* Success Toast */}
-      <Toast
-        message="Profile updated successfully"
-        type="success"
-        isVisible={showSuccessToast}
-        onClose={() => setShowSuccessToast(false)}
-        duration={3000}
+      {/* Success Modal */}
+      <SuccessModal
+        isOpen={showSuccessModal}
+        title="Profile Updated"
+        message="The employee profile has been successfully updated."
+        onClose={() => setShowSuccessModal(false)}
       />
 
       {/* Status change Toast */}
