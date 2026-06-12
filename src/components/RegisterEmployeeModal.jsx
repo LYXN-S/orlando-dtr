@@ -1,18 +1,10 @@
 import { useFormValidation, validators } from '../hooks/useFormValidation'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import RoleCombobox from './RoleCombobox'
 import ConfirmDiscardModal from './ConfirmDiscardModal'
+import LoadingModal from './LoadingModal'
 
-const validationRules = {
-  firstName: [validators.required('First name')],
-  lastName: [validators.required('Last name')],
-  email: [validators.required('Email'), validators.email],
-  contactNumber: [validators.required('Phone number'), validators.phone],
-  position: [validators.required('Position')],
-  streetAddress: [validators.required('Street address')],
-  city: [validators.required('City')],
-  province: [validators.required('Province')]
-}
+
 
 export default function RegisterEmployeeModal({
   registerForm,
@@ -21,9 +13,32 @@ export default function RegisterEmployeeModal({
   handleRegisterEmployee,
   onCancel,
   onFormChangeDetected,
+  employees = []
 }) {
   const [hasFormChanges, setHasFormChanges] = useState(false)
   const [showConfirmClose, setShowConfirmClose] = useState(false)
+
+  const validationRules = useMemo(() => ({
+    firstName: [validators.required('First name')],
+    lastName: [validators.required('Last name')],
+    email: [
+      validators.required('Email'), 
+      validators.email,
+      (value) => {
+        if (!value) return '';
+        const isDuplicate = employees.some(
+          emp => emp.email.trim().toLowerCase() === value.trim().toLowerCase()
+        );
+        return isDuplicate ? 'Email is already registered' : '';
+      }
+    ],
+    contactNumber: [validators.required('Phone number'), validators.phone],
+    position: [validators.required('Position')],
+    streetAddress: [validators.required('Street address')],
+    city: [validators.required('City')],
+    province: [validators.required('Province')]
+  }), [employees])
+
   const {
     values,
     errors,
@@ -273,7 +288,7 @@ export default function RegisterEmployeeModal({
           className="primary-btn"
           disabled={isRegistering}
         >
-          {isRegistering ? 'Registering...' : 'Register Employee'}
+          Register Employee
         </button>
       </div>
     </form>
@@ -282,6 +297,11 @@ export default function RegisterEmployeeModal({
       isOpen={showConfirmClose}
       onKeepEditing={handleKeepEditing}
       onDiscard={handleDiscardChanges}
+    />
+
+    <LoadingModal 
+      isOpen={isRegistering} 
+      message="Registering Employee..." 
     />
   </>
   )
