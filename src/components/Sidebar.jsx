@@ -1,5 +1,5 @@
 import { useRef, useEffect, useState } from 'react'
-import orlandoLogo from '../assets/orlando_logo.jpg'
+import newLogo from '../assets/new_logo.png'
 
 export default function Sidebar({ activeTab, setActiveTab, handleLogout }) {
   const navRef = useRef(null)
@@ -74,7 +74,7 @@ export default function Sidebar({ activeTab, setActiveTab, handleLogout }) {
     <aside className={`sidebar ${isCollapsed ? 'collapsed' : ''}`}>
       <div className="sidebar-header">
         <div className="sidebar-logo-container">
-          <img src={orlandoLogo} alt="Orlando Prestige Inc." className="sidebar-logo" />
+          <img src={newLogo} alt="Orlando Prestige Inc." className="sidebar-logo" />
           <span className="sidebar-brand-text">Orlando Prestige Inc.</span>
         </div>
         <button 
