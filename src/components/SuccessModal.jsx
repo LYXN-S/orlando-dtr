@@ -17,7 +17,7 @@ export default function SuccessModal({ isOpen, title, message, onClose }) {
   if (!isOpen) return null
 
   return (
-    <div className="confirm-discard-overlay" onClick={onClose} style={{ zIndex: 3000 }}>
+    <div className="confirm-discard-overlay" onClick={onClose} style={{ zIndex: 3000, background: 'rgba(255, 255, 255, 0.15)' }}>
       <div className="confirm-discard-content" onClick={(e) => e.stopPropagation()} style={{ textAlign: 'center' }}>
         <div className="confirm-discard-icon" style={{ backgroundColor: 'rgba(16, 185, 129, 0.1)', color: '#10b981', margin: '0 auto 1.25rem' }}>
           <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
